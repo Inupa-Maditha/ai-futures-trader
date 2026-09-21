@@ -1,0 +1,6 @@
+﻿pybit>=5.0.0
+pandas
+numpy
+pydantic
+python-dotenv
+pytest
