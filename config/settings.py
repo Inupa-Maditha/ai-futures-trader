@@ -48,6 +48,16 @@ GROQ_BASE_URL = os.getenv(
     "GROQ_BASE_URL",
     "https://api.groq.com/openai/v1",
 )
+    
+ENABLE_DEMO_EXECUTION = (
+    os.getenv(
+        "ENABLE_DEMO_EXECUTION",
+        "false",
+    )
+    .strip()
+    .lower()
+    == "true"
+)
 
 def validate_settings():
     if not BYBIT_DEMO_API_KEY:
@@ -103,4 +113,13 @@ def validate_bybit_demo_settings():
     if not BYBIT_DEMO_API_SECRET:
         raise RuntimeError(
             "BYBIT_DEMO_API_SECRET is missing."
+        )
+
+def validate_demo_execution_enabled():
+    if not ENABLE_DEMO_EXECUTION:
+        raise RuntimeError(
+            "Demo execution is DISABLED. "
+            "Set ENABLE_DEMO_EXECUTION=true "
+            "only for an intentional "
+            "Bybit Demo execution test."
         )
