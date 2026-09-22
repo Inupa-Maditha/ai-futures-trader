@@ -35,6 +35,20 @@ LM_STUDIO_MODEL = os.getenv(
     "LM_STUDIO_MODEL",
 )
 
+GROQ_API_KEY = os.getenv(
+    "GROQ_API_KEY",
+)
+
+GROQ_MODEL = os.getenv(
+    "GROQ_MODEL",
+    "openai/gpt-oss-20b",
+)
+
+GROQ_BASE_URL = os.getenv(
+    "GROQ_BASE_URL",
+    "https://api.groq.com/openai/v1",
+)
+
 def validate_settings():
     if not BYBIT_DEMO_API_KEY:
         raise RuntimeError("BYBIT_DEMO_API_KEY is missing.")
@@ -64,21 +78,6 @@ def validate_lmstudio_settings():
             "LM_STUDIO_MODEL is missing."
         )
 
-GROQ_API_KEY = os.getenv(
-    "GROQ_API_KEY",
-)
-
-GROQ_MODEL = os.getenv(
-    "GROQ_MODEL",
-    "openai/gpt-oss-20b",
-)
-
-GROQ_BASE_URL = os.getenv(
-    "GROQ_BASE_URL",
-    "https://api.groq.com/openai/v1",
-)
-
-
 def validate_groq_settings():
     if not GROQ_API_KEY:
         raise RuntimeError(
@@ -93,4 +92,15 @@ def validate_groq_settings():
     if not GROQ_BASE_URL:
         raise RuntimeError(
             "GROQ_BASE_URL is missing."
+        )
+    
+def validate_bybit_demo_settings():
+    if not BYBIT_DEMO_API_KEY:
+        raise RuntimeError(
+            "BYBIT_DEMO_API_KEY is missing."
+        )
+
+    if not BYBIT_DEMO_API_SECRET:
+        raise RuntimeError(
+            "BYBIT_DEMO_API_SECRET is missing."
         )
