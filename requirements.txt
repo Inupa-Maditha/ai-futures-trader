@@ -4,3 +4,4 @@ numpy
 pydantic
 python-dotenv
 pytest
+openai

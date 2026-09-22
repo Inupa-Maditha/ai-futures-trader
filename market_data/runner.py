@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from threading import Event, Thread
+from threading import Event, Lock, Thread
 from time import sleep
 
 from config.settings import SYMBOL
@@ -11,6 +11,9 @@ from data_quality.freshness import (
 
 from derivatives.bybit_derivatives import (
     BybitDerivativesService,
+    FundingSnapshot,
+    OpenInterestSnapshot,
+    PositioningSnapshot,
 )
 
 from market_data.candles import CandleService
@@ -69,6 +72,20 @@ class MarketDataRunner:
             health_monitor=self.health_monitor,
             recorder=self.recorder,
         )
+
+        self.latest_open_interest: (
+            OpenInterestSnapshot | None
+        ) = None
+
+        self.latest_funding: (
+            FundingSnapshot | None
+        ) = None
+
+        self.latest_positioning: (
+            PositioningSnapshot | None
+        ) = None
+
+        self._derivatives_lock = Lock()
 
         self._rest_thread: Thread | None = None
 
@@ -131,15 +148,49 @@ class MarketDataRunner:
             )
         )
 
+        # Publish the new derivatives batch
+        # atomically after all calls succeed.
+        with self._derivatives_lock:
+            self.latest_open_interest = oi
+            self.latest_funding = funding
+            self.latest_positioning = positioning
+
         print(
             "[REST] "
             f"OI={oi.current} BTC | "
-            f"Funding="
-            f"{funding.current_funding_rate} | "
+            f"Funding={funding.current_funding_rate} | "
             f"Long="
             f"{positioning.account_holder_long_ratio} | "
             f"Short="
             f"{positioning.account_holder_short_ratio}"
+        )
+
+    def get_latest_derivatives(
+        self,
+    ) -> tuple[
+        OpenInterestSnapshot,
+        FundingSnapshot,
+        PositioningSnapshot,
+    ]:
+        with self._derivatives_lock:
+            oi = self.latest_open_interest
+            funding = self.latest_funding
+            positioning = self.latest_positioning
+
+        if (
+            oi is None
+            or funding is None
+            or positioning is None
+        ):
+            raise RuntimeError(
+                "Derivative market data has "
+                "not been initialized yet."
+            )
+
+        return (
+            oi,
+            funding,
+            positioning,
         )
 
     def _rest_loop(self) -> None:
@@ -180,7 +231,9 @@ class MarketDataRunner:
     def print_health_summary(self) -> None:
         summary = self.health_monitor.summary()
 
-        print("\n=== Market Data Health ===")
+        print(
+            "\n=== Market Data Health ==="
+        )
 
         for name, status in summary.items():
             print(
@@ -214,12 +267,8 @@ class MarketDataRunner:
 
         self.start_websockets()
 
-        # Give WebSocket subscriptions
-        # a short startup window.
         sleep(3)
 
-        # Fetch REST data immediately before
-        # the background polling cycle starts.
         self.poll_rest_once()
 
         self.start_rest_poller()
