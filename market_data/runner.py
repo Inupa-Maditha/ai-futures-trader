@@ -88,7 +88,7 @@ class MarketDataRunner:
                 self.candle_service
                 .fetch_closed_candles(
                     timeframe=timeframe,
-                    limit=200,
+                    limit=250,
                 )
             )
 
