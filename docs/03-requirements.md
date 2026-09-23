@@ -419,13 +419,13 @@ The CLI shall display at minimum:
 * Contradicting evidence
 * Risk-engine verdict
 
-The user shall explicitly choose:
+The user shall explicitly type:
 
 ```text
-Approve? [Y/N]
+APPROVE
 ```
 
-No trade shall execute without approval.
+Only the exact approval token is accepted by the V1 CLI. No trade shall execute without approval.
 
 ---
 
@@ -941,3 +941,49 @@ Execution Layer
 ```
 
 Neither the LLM nor the human approval step may override a deterministic risk rejection.
+
+---
+
+# 6. Phase 15 Implementation Status
+
+The Phase 15 baseline implements the core V1 authority model:
+
+```text
+Market Data
+    ↓
+Deterministic Analysis / Context
+    ↓
+Bounded LLM Proposal
+    ↓
+Schema / Evidence Validation
+    ↓
+Deterministic Risk Engine
+    ↓
+Execution Safety Switch
+    ↓
+Exact Manual Approval
+    ↓
+Bybit Demo Execution
+    ↓
+Persistent Journal / Evaluation
+```
+
+Current implemented baseline includes:
+
+- BTCUSDT-only market-data processing
+- 4H / 1H / 15m closed-candle analysis
+- EMA / RSI / ATR and deterministic market-structure features
+- Open Interest, funding, account-holder positioning, liquidations, order book, and recent-trade context
+- Structured market context
+- Groq-hosted `openai/gpt-oss-20b` decision generation
+- Structured proposal validation and evidence grounding
+- Independent deterministic risk validation
+- Exact manual approval token: `APPROVE`
+- Deterministic `orderLinkId` generation
+- Duplicate-submit prevention and uncertain-submission reconciliation
+- Bybit Demo-only authenticated execution
+- JSONL / CSV journal
+- Closed-trade evaluation tooling
+- Security audit and Phase 15 integration test coverage
+
+Phase 15 stability testing is still in progress. Strategy-performance validation belongs to Phase 16 and Phase 17.

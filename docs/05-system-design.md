@@ -1543,3 +1543,70 @@ TRADE JOURNAL / EVALUATION
 ```
 
 This architecture is the baseline V1 design and should remain stable unless a later implementation or integration test reveals a concrete technical reason to change it.
+
+---
+
+# 18. Phase 15 Implemented Architecture Snapshot
+
+The implemented V1 baseline now uses a testable orchestration layer rather than duplicating control flow inside the production runner.
+
+```text
+MarketDataRunner
+      ↓
+Market Context Provider
+      ↓
+Decision Provider
+      ↓
+TradingPipeline
+      ↓
+Risk Provider
+      ↓
+Execution Safety Provider
+      ↓
+Approval Provider
+      ↓
+Execution Request Provider
+      ↓
+Execution Coordinator
+      ↓
+JournalRunLifecycle
+```
+
+Key implemented modules / responsibilities include:
+
+- `market_data/` — REST / WebSocket acquisition, health, freshness, and recording
+- technical / structure modules — deterministic indicators and market structure
+- `context_engine/` — structured market context
+- decision layer — bounded Groq LLM proposal generation and validation
+- risk layer — deterministic position sizing and rule enforcement
+- approval layer — exact manual `APPROVE` gate
+- execution layer — Demo preflight, deterministic order identity, reconciliation, and duplicate prevention
+- `orchestration/pipeline.py` — integrated V1 pipeline
+- `journal/` — persistent lifecycle logging and integrity validation
+- `evaluation/` — system metrics, closed-trade metrics, outcome import, and equity-curve tooling
+- `system_checks/` — security audit
+
+The production runner delegates orchestration to `TradingPipeline`, which is also covered by integration tests.
+
+## 18.1 Execution Safety Default
+
+```env
+ENABLE_DEMO_EXECUTION=false
+```
+
+Execution is therefore disabled by default even when market analysis produces a risk-approved proposal.
+
+## 18.2 Phase 15 Baseline
+
+```text
+Branch:
+feature/system-integration-testing
+
+Commit:
+9a18e050f68aa311f4ca4a7628384eee6aec21af
+
+Tag:
+phase15-stability-baseline
+```
+
+The architecture above is frozen for the current Phase 15 stability window unless a critical defect requires a new baseline.

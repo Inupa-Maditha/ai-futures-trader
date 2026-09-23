@@ -1,5 +1,7 @@
 # Engineering Validation Report for a V1 AI-Assisted Bybit BTCUSDT Perpetual Trading System
 
+
+> **Citation note:** This repository copy replaces ChatGPT-internal citation tokens with portable source labels such as `[S1]`, `[S2]`. The corresponding source names are retained in the source list near the end of this document.
 ## Executive Summary and Bybit API Findings
 
 **Executive Summary**
@@ -8,13 +10,13 @@
 
 **Bybit mainnet public REST/WebSocket market data → deterministic normalization/features → compact structured market-context snapshot → LLM analyst → strict schema/semantic validator → independent deterministic risk engine → manual approval → Bybit Demo REST execution → Demo private WebSocket confirmation/reconciliation → CSV/JSON journal.**
 
-The most important architectural conclusion is that **Bybit Demo Trading is not the same environment as Testnet**. Bybit's current Demo documentation says Demo Trading is an isolated service with its own UID; authenticated Demo REST uses `api-demo.bybit.com`, Demo private WebSocket uses `stream-demo.bybit.com`, Demo does not support WebSocket order-entry, and public market data should come from the ordinary mainnet public stream because that public data is identical to mainnet. Bybit specifically warns against creating a Demo API key from Testnet. citeturn9view0
+The most important architectural conclusion is that **Bybit Demo Trading is not the same environment as Testnet**. Bybit's current Demo documentation says Demo Trading is an isolated service with its own UID; authenticated Demo REST uses `api-demo.bybit.com`, Demo private WebSocket uses `stream-demo.bybit.com`, Demo does not support WebSocket order-entry, and public market data should come from the ordinary mainnet public stream because that public data is identical to mainnet. Bybit specifically warns against creating a Demo API key from Testnet. [S20]
 
-For the requested live inputs, Bybit V5 exposes 15-minute, 1-hour and 4-hour klines; order-book snapshots and deltas; public trades with taker side; open interest; funding history; account long/short ratios; and a real-time all-liquidation stream. Therefore, **no paid external data vendor is required for V1 live forward testing**. citeturn1search0turn2view0turn2view1turn2view2turn5view0turn5view1turn5view2
+For the requested live inputs, Bybit V5 exposes 15-minute, 1-hour and 4-hour klines; order-book snapshots and deltas; public trades with taker side; open interest; funding history; account long/short ratios; and a real-time all-liquidation stream. Therefore, **no paid external data vendor is required for V1 live forward testing**. [S3][S5][S9][S12][S15][S13][S14]
 
-The principal Bybit data limitation is historical microstructure rather than live availability. REST order book is a current snapshot, while the WebSocket supplies live deltas. Liquidations are exposed as a live WebSocket stream. Recent public trades are available through REST and Bybit points users to downloadable archives for older public trades. Consequently, a V1 that may later need historical order-flow replay should **record its own normalized order-book, trade and liquidation streams from day one**. citeturn2view0turn2view1turn3view0turn5view0
+The principal Bybit data limitation is historical microstructure rather than live availability. REST order book is a current snapshot, while the WebSocket supplies live deltas. Liquidations are exposed as a live WebSocket stream. Recent public trades are available through REST and Bybit points users to downloadable archives for older public trades. Consequently, a V1 that may later need historical order-flow replay should **record its own normalized order-book, trade and liquidation streams from day one**. [S5][S9][S6][S15]
 
-The LLM should not be the trading system's controller. Empirical research has documented hallucination problems in financial LLM tasks, while a 2026 review of LLM trading-agent literature found serious weaknesses in reproducibility, transaction-cost modeling and evaluation protocol consistency. citeturn17academia30turn17academia31 The strongest V1 design therefore makes the LLM a **bounded analyst/proposal generator**, not an executor or risk authority.
+The LLM should not be the trading system's controller. Empirical research has documented hallucination problems in financial LLM tasks, while a 2026 review of LLM trading-agent literature found serious weaknesses in reproducibility, transaction-cost modeling and evaluation protocol consistency. [S40][S41] The strongest V1 design therefore makes the LLM a **bounded analyst/proposal generator**, not an executor or risk authority.
 
 The recommended chain is:
 
@@ -70,24 +72,24 @@ That includes stale data, uncertain order-book state, lost private connectivity,
 
 For terminology throughout this report:
 
-**Verified fact** means explicitly supported by primary documentation or research.  
-**Engineering recommendation** means my architecture judgment.  
-**Inference** means a conclusion derived from multiple documented facts.  
+**Verified fact** means explicitly supported by primary documentation or research.
+**Engineering recommendation** means my architecture judgment.
+**Inference** means a conclusion derived from multiple documented facts.
 **Uncertainty** means the documentation reviewed does not establish the behavior strongly enough to rely upon it.
 
 **Bybit API Findings**
 
 ### Market and timeframe feasibility
 
-**Verified fact:** Bybit V5's Kline endpoint covers USDT contracts and accepts intervals including `15`, `60`, and `240`, directly matching your 15m, 1H and 4H hierarchy. REST Kline requests support up to 1,000 candles per request. citeturn1search0
+**Verified fact:** Bybit V5's Kline endpoint covers USDT contracts and accepts intervals including `15`, `60`, and `240`, directly matching your 15m, 1H and 4H hierarchy. REST Kline requests support up to 1,000 candles per request. [S3]
 
-Bybit's Kline WebSocket similarly supports those intervals. Importantly, its payload contains a `confirm` field: `true` means the candle is closed, while `false` identifies a still-forming candle. Bybit states Kline updates are pushed at frequencies between one and 60 seconds. citeturn6view0
+Bybit's Kline WebSocket similarly supports those intervals. Importantly, its payload contains a `confirm` field: `true` means the candle is closed, while `false` identifies a still-forming candle. Bybit states Kline updates are pushed at frequencies between one and 60 seconds. [S4]
 
-**Engineering recommendation:** Indicator and structural calculations that affect entry eligibility should use **confirmed closed bars only**. An incomplete bar may be exposed separately as informational context but should not silently replace a closed bar. This mirrors a failure mode that Freqtrade explicitly guards against: it removes incomplete candles by default because indicators evaluated on incomplete bars can create misleading signals. citeturn12search9
+**Engineering recommendation:** Indicator and structural calculations that affect entry eligibility should use **confirmed closed bars only**. An incomplete bar may be exposed separately as informational context but should not silently replace a closed bar. This mirrors a failure mode that Freqtrade explicitly guards against: it removes incomplete candles by default because indicators evaluated on incomplete bars can create misleading signals. [S31]
 
 ### Order book
 
-**Verified fact:** `/v5/market/orderbook` provides a snapshot; linear/inverse contracts can request as many as 1,000 levels. Bybit supplies several useful clocks/sequence fields: `ts` is a system timestamp, `u` is the update identifier, `seq` is a cross sequence, and `cts` is the matching-engine timestamp. Bybit specifically says `cts` can be correlated with the public-trade `T` timestamp. RPI orders are excluded from the API-visible order book. citeturn2view0
+**Verified fact:** `/v5/market/orderbook` provides a snapshot; linear/inverse contracts can request as many as 1,000 levels. Bybit supplies several useful clocks/sequence fields: `ts` is a system timestamp, `u` is the update identifier, `seq` is a cross sequence, and `cts` is the matching-engine timestamp. Bybit specifically says `cts` can be correlated with the public-trade `T` timestamp. RPI orders are excluded from the API-visible order book. [S5]
 
 The public order-book WebSocket is substantially more useful for order-flow work. For linear/inverse contracts, documented depths/frequencies include approximately:
 
@@ -98,39 +100,39 @@ The public order-book WebSocket is substantially more useful for order-flow work
 | 200 | 100 ms |
 | 1000 | 200 ms |
 
-Bybit sends an initial snapshot followed by deltas whenever the book changes. A new snapshot must replace the local book. Delta entries with size zero delete a price level; a missing level should be inserted; an existing level should be updated. Level 1 is snapshot-only, and Bybit may resend an unchanged L1 snapshot after three seconds. Bybit also documents that an update ID of `1` can occur after a service restart and should cause the local book to be overwritten. citeturn3view0turn3view1turn3view2
+Bybit sends an initial snapshot followed by deltas whenever the book changes. A new snapshot must replace the local book. Delta entries with size zero delete a price level; a missing level should be inserted; an existing level should be updated. Level 1 is snapshot-only, and Bybit may resend an unchanged L1 snapshot after three seconds. Bybit also documents that an update ID of `1` can occur after a service restart and should cause the local book to be overwritten. [S6][S7][S8]
 
 **Engineering recommendation:** Use **L50** initially. It gives much more useful near-book context than L1 while avoiding the storage and computational noise of maintaining 1,000 levels at 200 ms cadence. Make depth configurable so L200 can be evaluated later without redesigning the adapter.
 
 ### Public trades
 
-**Verified fact:** REST `/v5/market/recent-trade` supplies price, size, taker side, execution identifier, execution time and sequence information; linear/inverse requests can return up to 1,000 entries. Bybit also points users to downloadable archived historical trade data. citeturn2view1
+**Verified fact:** REST `/v5/market/recent-trade` supplies price, size, taker side, execution identifier, execution time and sequence information; linear/inverse requests can return up to 1,000 entries. Bybit also points users to downloadable archived historical trade data. [S9]
 
-The public-trades WebSocket is real time. For futures/spot, one WebSocket message can contain up to 1,024 trades, and more than one message can share a sequence number. Each trade includes matched time `T`, taker side, size, price and trade ID, while records in the payload are ordered by matched time. citeturn3view3turn3view4
+The public-trades WebSocket is real time. For futures/spot, one WebSocket message can contain up to 1,024 trades, and more than one message can share a sequence number. Each trade includes matched time `T`, taker side, size, price and trade ID, while records in the payload are ordered by matched time. [S10][S11]
 
 That is sufficient to calculate exchange-local aggressive buy volume versus aggressive sell volume without inferring aggressor direction yourself.
 
 ### Open interest
 
-**Verified fact:** `/v5/market/open-interest` supports USDT contracts and sampling intervals of `5min`, `15min`, `30min`, `1h`, `4h`, and `1d`. The maximum page is 200 rows, cursor pagination is available, and the upper historical boundary can extend to the symbol's launch time. Bybit cautions that extreme volatility can introduce increased latency or temporary data delays. For linear BTCUSDT, Bybit documents open interest in BTC units. citeturn2view2
+**Verified fact:** `/v5/market/open-interest` supports USDT contracts and sampling intervals of `5min`, `15min`, `30min`, `1h`, `4h`, and `1d`. The maximum page is 200 rows, cursor pagination is available, and the upper historical boundary can extend to the symbol's launch time. Bybit cautions that extreme volatility can introduce increased latency or temporary data delays. For linear BTCUSDT, Bybit documents open interest in BTC units. [S12]
 
 **Engineering recommendation:** Do not pretend OI is tick-level order flow. Align OI observations with their documented sampling timestamps and treat OI change as a slower derivatives-state feature.
 
 ### Funding
 
-**Verified fact:** `/v5/market/funding/history` exposes perpetual funding history, with up to 200 records per call. The funding interval is instrument-specific; Bybit directs clients to instrument information rather than assuming a universal interval. A request containing a `startTime` without an `endTime` is invalid, while an `endTime` alone can retrieve the preceding records. citeturn5view1
+**Verified fact:** `/v5/market/funding/history` exposes perpetual funding history, with up to 200 records per call. The funding interval is instrument-specific; Bybit directs clients to instrument information rather than assuming a universal interval. A request containing a `startTime` without an `endTime` is invalid, while an `endTime` alone can retrieve the preceding records. [S13]
 
 **Engineering recommendation:** Query the instrument's funding interval at startup and store it in symbol metadata. Do not hard-code an eight-hour assumption.
 
 ### Long/short ratio
 
-**Verified fact:** `/v5/market/account-ratio` defines `buyRatio` as the proportion of position holders who are net long and `sellRatio` as the proportion who are net short. It supports `5min`, `15min`, `30min`, `1h`, `4h`, and `1d`, has a maximum page size of 500, and the documented earliest start time is July 20, 2020. This endpoint carries the same extreme-volatility delay warning. citeturn5view2
+**Verified fact:** `/v5/market/account-ratio` defines `buyRatio` as the proportion of position holders who are net long and `sellRatio` as the proportion who are net short. It supports `5min`, `15min`, `30min`, `1h`, `4h`, and `1d`, has a maximum page size of 500, and the documented earliest start time is July 20, 2020. This endpoint carries the same extreme-volatility delay warning. [S14]
 
 **Engineering recommendation:** Name this feature something like `account_holder_long_ratio`, not generic `long_short_ratio`, because it is specifically a ratio of position holders. Naming it precisely reduces the chance that either deterministic code or the LLM mistakes it for long/short notional volume.
 
 ### Liquidations
 
-**Verified fact:** Bybit's `allLiquidation.{symbol}` WebSocket covers linear contracts and pushes all liquidations on the exchange every 500 ms. Events include updated timestamp, side, quantity and bankruptcy price. citeturn5view0
+**Verified fact:** Bybit's `allLiquidation.{symbol}` WebSocket covers linear contracts and pushes all liquidations on the exchange every 500 ms. Events include updated timestamp, side, quantity and bankruptcy price. [S15]
 
 **Inference:** The reviewed V5 material gives you strong **live** liquidation coverage but not an equivalent historical liquidation REST time series suitable for arbitrary replay. Therefore, historical liquidation-based backtests require either data that you record yourself or a historical market-data archive.
 
@@ -149,7 +151,7 @@ A useful V1 canonical timestamp model is:
 | Funding | funding-rate timestamp | Scheduled derivatives state |
 | Local client | UTC receipt time + monotonic clock | Latency/freshness measurement |
 
-Bybit authentication has an explicit timestamp window condition and recommends NTP synchronization of the client's local clock. The default receive window is 5,000 ms. citeturn6view1
+Bybit authentication has an explicit timestamp window condition and recommends NTP synchronization of the client's local clock. The default receive window is 5,000 ms. [S18]
 
 **Engineering recommendation:** Every logged event should keep both:
 
@@ -170,9 +172,9 @@ Never destroy the original exchange timestamps by overwriting them with a conver
 
 ### REST and WebSocket limits
 
-**Verified fact:** Bybit documents a default HTTP IP limit of 600 requests per five seconds per IP; crossing it can produce HTTP 403, after which the documentation instructs users to terminate sessions and wait at least ten minutes. Endpoint-level API limits are also applied per UID on a rolling one-second basis, and response headers report the applicable limit and remaining allowance. citeturn7view1
+**Verified fact:** Bybit documents a default HTTP IP limit of 600 requests per five seconds per IP; crossing it can produce HTTP 403, after which the documentation instructs users to terminate sessions and wait at least ten minutes. Endpoint-level API limits are also applied per UID on a rolling one-second basis, and response headers report the applicable limit and remaining allowance. [S19]
 
-For linear trading, documented limits include 10 requests/sec for order create, amend and cancel, while several order/history/execution/position queries are allowed at higher rates such as 50/sec. citeturn7view1
+For linear trading, documented limits include 10 requests/sec for order create, amend and cancel, while several order/history/execution/position queries are allowed at higher rates such as 50/sec. [S19]
 
 Bybit WebSocket guidance states:
 
@@ -180,7 +182,7 @@ Bybit WebSocket guidance states:
 - a market-data connection cap at the IP/category level;
 - clients should avoid frequent connection/disconnection;
 - connections can disconnect at any time because of network complexity and should reconnect promptly;
-- sending a ping approximately every 20 seconds is recommended. citeturn6view2turn7view0
+- [S1] [S2] sending a ping approximately every 20 seconds is recommended.
 
 **Engineering recommendation:** A BTCUSDT-only application should be nowhere near these limits. If V1 routinely approaches them, the architecture is polling too aggressively.
 
@@ -222,25 +224,25 @@ The environment decision should be unambiguous.
 | WebSocket order entry | **Do not use** | Demo does not support it |
 | Testnet | **Do not use for V1** | Unnecessary second environment |
 
-**Verified fact:** Bybit says Demo Trading is isolated, has its own UID, uses `https://api-demo.bybit.com` for REST and `wss://stream-demo.bybit.com` for its supported private streams. The same documentation says public market data is identical to mainnet and instructs Demo users to connect to `wss://stream.bybit.com` for public data. WebSocket Trade/order-entry is not supported in Demo. citeturn9view0
+**Verified fact:** Bybit says Demo Trading is isolated, has its own UID, uses `https://api-demo.bybit.com` for REST and `wss://stream-demo.bybit.com` for its supported private streams. The same documentation says public market data is identical to mainnet and instructs Demo users to connect to `wss://stream.bybit.com` for public data. WebSocket Trade/order-entry is not supported in Demo. [S20]
 
-**Verified fact:** Bybit also explicitly says creating a Demo API key from Testnet Demo is meaningless; the normal process is to switch a mainnet account into Demo Trading and create a Demo API key there. citeturn9view0
+**Verified fact:** Bybit also explicitly says creating a Demo API key from Testnet Demo is meaningless; the normal process is to switch a mainnet account into Demo Trading and create a Demo API key there. [S20]
 
 That gives you an important safety property: the application can have **unauthenticated mainnet public clients** and **authenticated Demo-only execution clients**, with no authenticated mainnet trading client anywhere in V1.
 
 ### Order capabilities
 
-Bybit's Demo-supported endpoint list includes create, amend and cancel order; cancel-all/open-order/order-history/trade-history operations; position endpoints including position list and Trading Stop; and Demo private WebSocket topics including order, execution, position and wallet. citeturn9view0
+Bybit's Demo-supported endpoint list includes create, amend and cancel order; cancel-all/open-order/order-history/trade-history operations; position endpoints including position list and Trading Stop; and Demo private WebSocket topics including order, execution, position and wallet. [S20]
 
-The general V5 order endpoint supports both market and limit orders. Bybit's market-order implementation converts a futures market request into an IOC limit order with a slippage-protection mechanism; if liquidity inside the acceptable range is unavailable, the order can fail rather than behave like an unlimited market sweep. citeturn10view0
+The general V5 order endpoint supports both market and limit orders. Bybit's market-order implementation converts a futures market request into an IOC limit order with a slippage-protection mechanism; if liquidity inside the acceptable range is unavailable, the order can fail rather than behave like an unlimited market sweep. [S21]
 
-The same endpoint supports conditional orders, take profit, stop loss and `reduceOnly`. `orderLinkId` is a client-supplied identifier up to 36 characters and must be unique, making it particularly useful as a client-side idempotency key. citeturn10view0
+The same endpoint supports conditional orders, take profit, stop loss and `reduceOnly`. `orderLinkId` is a client-supplied identifier up to 36 characters and must be unique, making it particularly useful as a client-side idempotency key. [S21]
 
-A significant Bybit-specific constraint is that an order marked `reduceOnly=true` cannot simultaneously specify TP/SL parameters. citeturn10view0
+A significant Bybit-specific constraint is that an order marked `reduceOnly=true` cannot simultaneously specify TP/SL parameters. [S21]
 
-`/v5/position/trading-stop` can create internal conditional TP/SL orders attached to a position. Bybit says these are automatically adjusted with the open position size and canceled when the position closes. Full-position and partial-position modes have different capabilities, and modifying only one side of a paired TP/SL can break the original pairing relationship. citeturn11view0
+`/v5/position/trading-stop` can create internal conditional TP/SL orders attached to a position. Bybit says these are automatically adjusted with the open position size and canceled when the position closes. Full-position and partial-position modes have different capabilities, and modifying only one side of a paired TP/SL can break the original pairing relationship. [S22]
 
-Amend and cancel acknowledgements are asynchronous; Bybit recommends confirming final order status through WebSocket rather than treating the REST acknowledgement itself as proof of the final state. citeturn11view1turn11view2 This matches the create-order API, which also tells the client to use WebSocket for confirmation. citeturn10view0
+Amend and cancel acknowledgements are asynchronous; Bybit recommends confirming final order status through WebSocket rather than treating the REST acknowledgement itself as proof of the final state. [S23][S24] This matches the create-order API, which also tells the client to use WebSocket for confirmation. [S21]
 
 ### Safe V1 order lifecycle
 
@@ -281,7 +283,7 @@ EXITING
 CLOSED
 ```
 
-Do not automatically retry a timed-out `POST /v5/order/create`. First query/reconcile using its unique `orderLinkId`. Bybit itself has an "invalid duplicate request" error class, and client-generated order IDs give you an explicit mechanism for determining whether an apparently failed request actually reached the server. citeturn20search2turn10view0
+Do not automatically retry a timed-out `POST /v5/order/create`. First query/reconcile using its unique `orderLinkId`. Bybit itself has an "invalid duplicate request" error class, and client-generated order IDs give you an explicit mechanism for determining whether an apparently failed request actually reached the server. [S26][S21]
 
 ### Protection policy
 
@@ -296,13 +298,13 @@ The exact pattern should be chosen after integration tests for market fills, lim
 
 ### Retention
 
-**Verified fact:** Bybit says Demo Trading orders are retained for **seven days**. Demo's standard rate limit is not upgradeable. citeturn9view0
+**Verified fact:** Bybit says Demo Trading orders are retained for **seven days**. Demo's standard rate limit is not upgradeable. [S20]
 
 **Engineering recommendation:** Your CSV/JSON journal is therefore not merely convenient. It is your durable V1 research record. Store request, acknowledgement, WS lifecycle events and reconciled terminal state locally before Bybit's Demo history expires.
 
 ### Demo versus live behavior
 
-**Verified fact:** Bybit describes Demo as following the basic trading rules of real trading, but also says not every API is available and explicitly documents Demo-specific differences such as seven-day order retention and lack of WebSocket order-entry. citeturn9view0
+**Verified fact:** Bybit describes Demo as following the basic trading rules of real trading, but also says not every API is available and explicitly documents Demo-specific differences such as seven-day order retention and lack of WebSocket order-entry. [S20]
 
 **Uncertainty:** The reviewed official documentation does **not** establish that Demo queue position, fill probability, market impact or slippage reproduce production trading perfectly.
 
@@ -314,20 +316,20 @@ Therefore:
 
 | V1 requirement | Direct Bybit source | Live? | Useful history | Key limitation | V1 judgment |
 |---|---|---:|---:|---|---|
-| BTCUSDT perpetual | V5 linear instruments/market APIs | Yes | N/A | Instrument rules can change | **Required: Bybit** citeturn19view0turn21view2 |
-| 15m candles | REST + Kline WS | Yes | REST pagination | 1,000/request | **Fully adequate** citeturn1search0turn6view0 |
-| 1H candles | REST + Kline WS | Yes | REST pagination | Same | **Fully adequate** citeturn1search0 |
-| 4H candles | REST + Kline WS | Yes | REST pagination | Same | **Fully adequate** citeturn1search0 |
-| Order book | REST snapshot + WS | Yes | Not equivalent full historical V5 book | RPI excluded | **Adequate live; self-record** citeturn2view0turn3view0 |
-| Public trades | REST + WS | Yes | Archive available | Venue-specific | **Fully adequate** citeturn2view1turn3view3 |
-| Open interest | REST | Periodic | To symbol launch, subject to API pagination | Can lag in volatility | **Adequate** citeturn2view2 |
-| Funding | REST | Scheduled | Yes | Interval instrument-specific | **Adequate** citeturn5view1 |
-| Long/short ratio | REST | Periodic | From July 20, 2020 | Holder ratio, not notional positioning | **Adequate** citeturn5view2 |
-| Liquidations | WS | Yes, 500 ms feed | Not equivalent REST archive found | Live-centric | **Adequate live; self-record** citeturn5view0 |
-| Aggressive buy/sell | Public-trade taker side | Yes | Trades can be archived | Only Bybit activity | **Derivable** citeturn2view1turn3view3 |
-| Bid/ask imbalance | L2 book | Yes | Must self-record for faithful replay | Spoof/cancel noise; RPI omission | **Derivable with caveats** citeturn3view0 |
-| Demo positions/orders | Demo REST + private WS | Yes | Seven days on Demo | Demo-specific | **Fully adequate** citeturn9view0 |
-| Demo executions | Demo REST + private WS | Yes | Seven days on Demo | One order may have multiple executions | **Fully adequate** citeturn19view1turn9view0 |
+| BTCUSDT perpetual | V5 linear instruments/market APIs | Yes | N/A | Instrument rules can change | **Required: Bybit** [S16][S17] |
+| 15m candles | REST + Kline WS | Yes | REST pagination | 1,000/request | **Fully adequate** [S3][S4] |
+| 1H candles | REST + Kline WS | Yes | REST pagination | Same | **Fully adequate** [S3] |
+| 4H candles | REST + Kline WS | Yes | REST pagination | Same | **Fully adequate** [S3] |
+| Order book | REST snapshot + WS | Yes | Not equivalent full historical V5 book | RPI excluded | **Adequate live; self-record** [S5][S6] |
+| Public trades | REST + WS | Yes | Archive available | Venue-specific | **Fully adequate** [S9][S10] |
+| Open interest | REST | Periodic | To symbol launch, subject to API pagination | Can lag in volatility | **Adequate** [S12] |
+| Funding | REST | Scheduled | Yes | Interval instrument-specific | **Adequate** [S13] |
+| Long/short ratio | REST | Periodic | From July 20, 2020 | Holder ratio, not notional positioning | **Adequate** [S14] |
+| Liquidations | WS | Yes, 500 ms feed | Not equivalent REST archive found | Live-centric | **Adequate live; self-record** [S15] |
+| Aggressive buy/sell | Public-trade taker side | Yes | Trades can be archived | Only Bybit activity | **Derivable** [S9][S10] |
+| Bid/ask imbalance | L2 book | Yes | Must self-record for faithful replay | Spoof/cancel noise; RPI omission | **Derivable with caveats** [S6] |
+| Demo positions/orders | Demo REST + private WS | Yes | Seven days on Demo | Demo-specific | **Fully adequate** [S20] |
+| Demo executions | Demo REST + private WS | Yes | Seven days on Demo | One order may have multiple executions | **Fully adequate** [S25][S20] |
 
 ### External-data decision
 
@@ -354,23 +356,23 @@ The point of reviewing mature systems is not to inherit their full stacks. It is
 
 ### Freqtrade lessons
 
-Freqtrade officially supports futures exchanges including Bybit and provides dry-run and historical backtesting modes. Its persistence/UI/multi-exchange footprint is considerably larger than your V1 requires. citeturn13search6
+Freqtrade officially supports futures exchanges including Bybit and provides dry-run and historical backtesting modes. Its persistence/UI/multi-exchange footprint is considerably larger than your V1 requires. [S27]
 
 Several design decisions are directly useful:
 
-Freqtrade's protection system includes StoplossGuard, MaxDrawdown and CooldownPeriod concepts. citeturn13search3 For your system, these translate well into a daily-loss lock, maximum-consecutive-loss observation and post-failure cooldown.
+Freqtrade's protection system includes StoplossGuard, MaxDrawdown and CooldownPeriod concepts. [S30] For your system, these translate well into a daily-loss lock, maximum-consecutive-loss observation and post-failure cooldown.
 
-Freqtrade supports exchange-side stops for Bybit futures, reflecting the broader design principle that protective exits should not depend solely on the client remaining online. citeturn13search2
+Freqtrade supports exchange-side stops for Bybit futures, reflecting the broader design principle that protective exits should not depend solely on the client remaining online. [S29]
 
-Its development guide explicitly calls for unit tests, online exchange compatibility tests, extended historical-data checks for holes, market-order/limit-order/cancel testing, complete entry-to-exit tests and fee/result reconciliation. It also specifically discusses dropping incomplete candles. citeturn12search9
+Its development guide explicitly calls for unit tests, online exchange compatibility tests, extended historical-data checks for holes, market-order/limit-order/cancel testing, complete entry-to-exit tests and fee/result reconciliation. It also specifically discusses dropping incomplete candles. [S31]
 
-Freqtrade additionally provides a lookahead-analysis facility that deliberately runs altered backtests to detect lookahead bias. citeturn13search10
+Freqtrade additionally provides a lookahead-analysis facility that deliberately runs altered backtests to detect lookahead bias. [S32]
 
 **Engineering recommendation:** Copy those testing disciplines, not the application.
 
 ### Hummingbot lessons
 
-Hummingbot's connector architecture places order-book tracking and user-stream tracking behind exchange connector objects. citeturn14search1 More importantly, its documented order lifecycle starts tracking an order **before** sending the exchange API request, then continues tracking until completion, cancellation, expiry or failure. citeturn14search5
+Hummingbot's connector architecture places order-book tracking and user-stream tracking behind exchange connector objects. [S33] More importantly, its documented order lifecycle starts tracking an order **before** sending the exchange API request, then continues tracking until completion, cancellation, expiry or failure. [S34]
 
 That pattern is exactly right for this project:
 
@@ -385,13 +387,13 @@ create local intent
 
 It prevents the common mistake of treating a synchronous HTTP response as the lifecycle.
 
-Hummingbot Strategy V2 also explicitly separates market-data access, controllers and self-contained execution-related components. citeturn14search8
+Hummingbot Strategy V2 also explicitly separates market-data access, controllers and self-contained execution-related components. [S35]
 
 **Engineering recommendation:** Borrow the modular boundaries while keeping your implementation vastly smaller.
 
 ### 3Commas lessons
 
-3Commas' current developer documentation exposes REST-based strategy/trading APIs, including Simple Trading and SmartTrade-style workflows that create, manage and close trades under predefined conditions. citeturn15search3turn15search31 It also offers backtesting-oriented tooling. citeturn15search33
+3Commas' current developer documentation exposes REST-based strategy/trading APIs, including Simple Trading and SmartTrade-style workflows that create, manage and close trades under predefined conditions. [S37][S38] It also offers backtesting-oriented tooling.
 
 The useful conceptual lesson is **separation of trade intent from execution management**.
 
@@ -399,7 +401,7 @@ The actual platform is a poor V1 fit because your specification explicitly favor
 
 ### NautilusTrader lessons
 
-NautilusTrader emphasizes reusable strategy logic across instruments/venues and typed configuration while exposing Python on top of a performance-oriented core. citeturn16search16
+NautilusTrader emphasizes reusable strategy logic across instruments/venues and typed configuration while exposing Python on top of a performance-oriented core. [S39]
 
 For V1, the lesson is simply: define strict typed interfaces between market state, strategy analysis, risk and execution. Do not adopt its full technology stack.
 
@@ -435,7 +437,7 @@ A pure LLM trading controller would accept market information, choose direction/
 
 That architecture is inappropriate here.
 
-Empirical work specifically examining LLMs on financial tasks reports serious hallucination behavior. citeturn17academia30 A 2026 review of agentic financial trading literature also found substantial weaknesses in reproducible protocols, explicit transaction-cost modeling and execution-semantics reporting. citeturn17academia31
+Empirical work specifically examining LLMs on financial tasks reports serious hallucination behavior. [S40] A 2026 review of agentic financial trading literature also found substantial weaknesses in reproducible protocols, explicit transaction-cost modeling and execution-semantics reporting. [S41]
 
 An output may also be perfectly valid JSON and still be economically or operationally nonsensical.
 
@@ -587,7 +589,7 @@ assumptions:
 
 Do not request free-form fields for leverage, account risk percentage or position quantity.
 
-Pydantic supports direct JSON parsing/validation through `model_validate_json()` and strict model specifications, making it a suitable Python boundary for this output. citeturn21search6turn21search10
+Pydantic supports direct JSON parsing/validation through `model_validate_json()` and strict model specifications, making it a suitable Python boundary for this output. [S42][S43]
 
 ### Validation stages
 
@@ -725,7 +727,7 @@ raw quantity
 → enforce notional/margin/leverage caps
 ```
 
-Current tick-size, quantity-step and other symbol specifications should be pulled from Bybit's instrument-information endpoint rather than hard-coded permanently. Bybit describes this endpoint as providing instrument specifications for online pairs. citeturn19view0
+Current tick-size, quantity-step and other symbol specifications should be pulled from Bybit's instrument-information endpoint rather than hard-coded permanently. Bybit describes this endpoint as providing instrument specifications for online pairs. [S16]
 
 **Engineering recommendation:** Make `risk_per_trade` a configuration input, not an LLM field. There is no engineering justification for claiming a particular percentage is profitable.
 
@@ -819,7 +821,7 @@ query/reconcile orderLinkId
 resubmit only if conclusively absent
 ```
 
-Bybit supports custom unique `orderLinkId` values, while its error catalog explicitly includes duplicate-request handling. citeturn10view0turn20search2
+Bybit supports custom unique `orderLinkId` values, while its error catalog explicitly includes duplicate-request handling. [S21][S26]
 
 ### Stale-data guard
 
@@ -921,7 +923,7 @@ Then define exactly which fields are eligibility requirements and which are desc
 
 Do not let the LLM invent new hierarchy rules during testing.
 
-At every 15m evaluation, use the most recently **confirmed** 4H/1H/15m bars. Bybit explicitly provides candle confirmation status for this purpose. citeturn6view0
+At every 15m evaluation, use the most recently **confirmed** 4H/1H/15m bars. Bybit explicitly provides candle confirmation status for this purpose. [S4]
 
 ### Order-flow feature set
 
@@ -950,9 +952,9 @@ short-window liquidation buy/sell volume
 imbalance persistence rather than one snapshot
 ```
 
-Bybit exposes taker side directly in public trades, so signed/aggressive-volume measures do not require a heuristic aggressor classifier. citeturn2view1turn3view3
+Bybit exposes taker side directly in public trades, so signed/aggressive-volume measures do not require a heuristic aggressor classifier. [S9][S10]
 
-The order book should be interpreted cautiously. Bybit excludes RPI orders from the API-visible book, so even the Bybit book is not literally every executable intention on the venue. citeturn2view0turn3view0
+The order book should be interpreted cautiously. Bybit excludes RPI orders from the API-visible book, so even the Bybit book is not literally every executable intention on the venue. [S5][S6]
 
 More fundamentally:
 
@@ -1010,13 +1012,13 @@ NormalizedEvent(
 )
 ```
 
-Bybit exposes materially different timestamps for different purposes. Order-book `cts` represents matching-engine timing and can be correlated with trade `T`; `ts` is the system-generated timestamp. citeturn2view0turn3view2
+Bybit exposes materially different timestamps for different purposes. Order-book `cts` represents matching-engine timing and can be correlated with trade `T`; `ts` is the system-generated timestamp. [S5][S8]
 
 Do not reduce all of those to a single `timestamp`.
 
 ### Clock synchronization
 
-Bybit's authentication rules constrain the client's timestamp relative to server time and explicitly recommend NTP synchronization. citeturn6view1
+Bybit's authentication rules constrain the client's timestamp relative to server time and explicitly recommend NTP synchronization. [S18]
 
 **Engineering recommendation:**
 
@@ -1047,7 +1049,7 @@ connect
        do not trade until healthy
 ```
 
-Bybit explicitly says a newly pushed snapshot replaces the local book and documents update ID `1` as a possible service-restart condition. citeturn3view0turn3view1
+Bybit explicitly says a newly pushed snapshot replaces the local book and documents update ID `1` as a possible service-restart condition. [S6][S7]
 
 Do not assume that every integer sequence must increment exactly by one unless the specific stream contract guarantees that semantics. Use documented ordering plus your own continuity/health checks.
 
@@ -1073,11 +1075,11 @@ local intent:
     intent_id / orderLinkId
 ```
 
-Bybit notes that one order may generate multiple executions and warns that execution-history records sharing the same `execTime` can have sorting ambiguity; it recommends additional fields such as execution/order identifiers and leaves quantity for ordering. citeturn19view1
+Bybit notes that one order may generate multiple executions and warns that execution-history records sharing the same `execTime` can have sorting ambiguity; it recommends additional fields such as execution/order identifiers and leaves quantity for ordering. [S25]
 
 ### Reconnect policy
 
-Bybit says WebSocket disconnection can occur because of network complexity and tells clients to reconnect promptly. It also recommends periodic ping messages and imposes connection-establishment limits. citeturn6view2turn7view0
+Bybit says WebSocket disconnection can occur because of network complexity and tells clients to reconnect promptly. It also recommends periodic ping messages and imposes connection-establishment limits. [S1][S2]
 
 Use:
 
@@ -1092,7 +1094,7 @@ connection lost
 → only then mark HEALTHY
 ```
 
-Avoid tight reconnect loops because Bybit limits connection establishments. citeturn7view0
+Avoid tight reconnect loops because Bybit limits connection establishments. [S2]
 
 ### Freshness should be feature-specific
 
@@ -1118,7 +1120,7 @@ The threshold values should be configurable and empirically observed.
 
 ### Extreme volatility
 
-Bybit explicitly warns that open-interest, long/short and instrument-information interfaces can experience increased latency or temporary data delays during extreme volatility. citeturn2view2turn5view2turn19view0
+Bybit explicitly warns that open-interest, long/short and instrument-information interfaces can experience increased latency or temporary data delays during extreme volatility. [S12][S14][S16]
 
 That matters because high-volatility periods are precisely when a trading engine may be most tempted to act.
 
@@ -1233,7 +1235,7 @@ partial entry fill
 
 Replay them and verify that the **system state** is correct.
 
-Historical simulations are especially vulnerable to data-mining and selection effects. Research on backtest overfitting shows that choosing the best result among many tested configurations can produce deceptively strong in-sample performance that fails out of sample. citeturn20search3turn20search25
+Historical simulations are especially vulnerable to data-mining and selection effects. Research on backtest overfitting shows that choosing the best result among many tested configurations can produce deceptively strong in-sample performance that fails out of sample. [S44]
 
 ### Integration tests
 
@@ -1259,7 +1261,7 @@ private WS event receipt
 REST/WS reconciliation
 ```
 
-Freqtrade's own developer guidance similarly calls for exchange-specific public tests plus real order creation, cancellation, completed-trade checks and fee/result reconciliation. citeturn12search9
+Freqtrade's own developer guidance similarly calls for exchange-specific public tests plus real order creation, cancellation, completed-trade checks and fee/result reconciliation. [S31]
 
 ### Failure-injection tests
 
@@ -1359,7 +1361,7 @@ risk_config_version
 
 If any decision rule changes, start a new experimental cohort.
 
-Changing filters after every loss is a form of adaptive data mining, precisely the problem backtest-overfitting research warns about. citeturn20search3
+Changing filters after every loss is a form of adaptive data mining, precisely the problem backtest-overfitting research warns about. [S44]
 
 ### Evaluation metrics
 
@@ -1456,7 +1458,7 @@ A production authenticated endpoint should require a future source-code change p
 
 ### Secrets
 
-GitHub's current guidance explicitly says never to hard-code secrets, recommends environment variables or a secret-management facility, and recommends rotation/expiration where possible. citeturn20search20
+GitHub's current guidance explicitly says never to hard-code secrets, recommends environment variables or a secret-management facility, and recommends rotation/expiration where possible. [S48]
 
 For this local V1:
 
@@ -1505,15 +1507,15 @@ rather than the entire signed request.
 
 ### Git defenses
 
-GitHub secret scanning checks repository history for hardcoded credentials, including API keys, passwords and tokens. Its push-protection feature can prevent recognized credentials from being pushed in the first place. citeturn20search1turn20search5
+GitHub secret scanning checks repository history for hardcoded credentials, including API keys, passwords and tokens. Its push-protection feature can prevent recognized credentials from being pushed in the first place. [S46][S47]
 
 Enable those features where available.
 
-If a secret is accidentally committed, removing the line from the latest commit is not sufficient. GitHub recommends rotating compromised credentials; historical Git copies can persist even after content is removed from the visible branch. citeturn20search1
+If a secret is accidentally committed, removing the line from the latest commit is not sufficient. GitHub recommends rotating compromised credentials; historical Git copies can persist even after content is removed from the visible branch. [S46]
 
 ### API permissions
 
-Use the minimum Demo permissions required to create/manage orders and query account/position state. Bybit's error catalog explicitly distinguishes permission failures and also supports IP-binding-related rejection. citeturn20search2
+Use the minimum Demo permissions required to create/manage orders and query account/position state. Bybit's error catalog explicitly distinguishes permission failures and also supports IP-binding-related rejection. [S26]
 
 For V1 there is no reason to possess withdrawal-capable real-account credentials.
 
@@ -1538,33 +1540,33 @@ Likelihood below is a **qualitative engineering assessment**, not a measured Byb
 | Risk | Impact | Likelihood | Mitigation |
 |---|---|---|---|
 | Bybit REST/API outage | High | Medium | Fail closed; no new entries; retry with backoff; maintain exchange-side protection |
-| Public WS disconnect | High | Medium | Immediate unhealthy state, reconnect, rebuild snapshots, warm features before re-enable. Bybit explicitly says disconnects may occur. citeturn6view2 |
+| Public WS disconnect | High | Medium | Immediate unhealthy state, reconnect, rebuild snapshots, warm features before re-enable. Bybit explicitly says disconnects may occur. [S1] |
 | Stale market data | High | Medium | Per-source freshness thresholds; `STALE → NO_TRADE` |
-| Incorrect local clock | High for auth/data alignment | Low–Medium | NTP; monitor offset; Bybit recommends synchronized time. citeturn6view1 |
+| Incorrect local clock | High for auth/data alignment | Low–Medium | NTP; monitor offset; Bybit recommends synchronized time. [S18] |
 | Timestamp semantic confusion | Medium–High | Medium | Preserve `ts`, `cts`, `T`, receipt time separately |
-| Missing order-book messages/state | High | Medium | Snapshot/delta health state; invalidate/rebuild rather than guess. citeturn3view0turn3view1 |
+| Missing order-book messages/state | High | Medium | Snapshot/delta health state; invalidate/rebuild rather than guess. [S6][S7] |
 | Duplicate event processing | Medium | Medium | Trade/execution IDs, idempotent state transitions |
 | Malformed LLM output | Medium | Medium initially | Strict schema, one bounded retry, otherwise NO TRADE |
 | Semantically invalid LLM output | High | Medium | Deterministic price/risk validation after schema validation |
-| LLM hallucination | High | Medium | Structured factual context; no execution/risk authority; evidence fields; independent validation; empirical finance research documents hallucination risk. citeturn17academia30 |
+| LLM hallucination | High | Medium | Structured factual context; no execution/risk authority; evidence fields; independent validation; empirical finance research documents hallucination risk. [S40] |
 | Duplicate order execution | High | Low–Medium | Unique intent/orderLinkId; reconcile uncertain POST before retry |
 | HTTP response lost after order accepted | High | Low–Medium | Treat status as UNKNOWN; query by orderLinkId; never blind retry |
 | Demo/private WS loss during order | High | Medium | REST reconciliation; execution state machine |
 | Demo/live behavior mismatch | High for future deployment conclusions | Medium | Never extrapolate Demo fills/slippage directly to production; separate future live validation |
-| Extreme volatility | High | Medium | Wider safety checks; reject stale derivatives/order-book data; Bybit warns some data endpoints may delay during volatility. citeturn2view2turn5view2 |
-| Market order not filled as expected | Medium–High | Low–Medium | Handle Bybit's market-as-IOC semantics; inspect terminal order status. citeturn10view0 |
+| Extreme volatility | High | Medium | Wider safety checks; reject stale derivatives/order-book data; Bybit warns some data endpoints may delay during volatility. [S12][S14] |
+| Market order not filled as expected | Medium–High | Low–Medium | Handle Bybit's market-as-IOC semantics; inspect terminal order status. [S21] |
 | Stop/TP not attached correctly | Very high | Low–Medium | Protective-state verification; automated alert/controlled emergency logic |
 | Order-book spoof/noise | Medium | High | Use persistence/aggregation, not single-level signals; cap weight in decision |
-| Incomplete market visibility | Medium | Certain | Explicitly label Bybit-only; RPI exclusion documented. citeturn2view0 |
-| Overfitting | Very high | High | Freeze definitions; limited hypothesis changes; out-of-sample/forward tests; track experiment count. citeturn20search3 |
+| Incomplete market visibility | Medium | Certain | Explicitly label Bybit-only; RPI exclusion documented. [S5] |
+| Overfitting | Very high | High | Freeze definitions; limited hypothesis changes; out-of-sample/forward tests; track experiment count. [S44] |
 | Strategy changes during test | High | High unless governed | Versioning; reset experimental cohort after material change |
 | Human approval mistake | High | Medium | Display exact entry/SL/TP/qty/risk and expiry; require single explicit confirmation |
 | Approval becomes stale | High | Medium | Short approval TTL and final market-price/freshness recheck |
 | Unexpected existing position | High | Low–Medium | Hard preflight rejection; REST account reconciliation |
-| Rate-limit breach | Medium | Low | WS-first design; client-side throttler; monitor headers. citeturn7view1 |
+| Rate-limit breach | Medium | Low | WS-first design; client-side throttler; monitor headers. [S19] |
 | Local application crash | High with open position | Medium | Exchange-native protection; restart reconciliation before new trading |
 | Disk/log write failure | Medium | Low–Medium | Health check and fail new entries when audit persistence unavailable |
-| Secret committed to Git | High | Low–Medium | `.gitignore`, push protection, secret scanning, immediate rotation. citeturn20search1turn20search5 |
+| Secret committed to Git | High | Low–Medium | `.gitignore`, push protection, secret scanning, immediate rotation. [S46][S47] |
 
 ## Recommended V1 Architecture and V2 / Deferred Features
 
@@ -1652,7 +1654,7 @@ At application startup:
 10. Enable analysis.
 ```
 
-Bybit's instrument-information endpoint is the appropriate source for current instrument specifications, while the dedicated market endpoints provide the relevant time series. citeturn19view0turn1search0turn2view2turn5view1
+Bybit's instrument-information endpoint is the appropriate source for current instrument specifications, while the dedicated market endpoints provide the relevant time series. [S16][S3][S12][S13]
 
 ### Rolling local store
 
@@ -1786,9 +1788,9 @@ Only then submit.
 
 ### Execution/reconciliation
 
-Bybit order acknowledgements are asynchronous, so private WebSocket should be the primary lifecycle feed with REST reconciliation as the recovery mechanism. citeturn10view0turn11view1turn11view2
+Bybit order acknowledgements are asynchronous, so private WebSocket should be the primary lifecycle feed with REST reconciliation as the recovery mechanism. [S21][S23][S24]
 
-Private Demo topics include order, execution and position, making this architecture directly supported. citeturn9view0
+Private Demo topics include order, execution and position, making this architecture directly supported. [S20]
 
 ### Event journal
 
@@ -1912,13 +1914,13 @@ The core architecture is sufficiently validated to begin development, but severa
 
 **LLM setup-quality scale.** Decide whether it has operational meaning. If "72/100" does not deterministically alter anything, it is merely an analysis field and should not be falsely interpreted as a calibrated probability.
 
-**Demo fill interpretation.** Bybit documents Demo capabilities but the reviewed material does not establish perfect production fill/queue/market-impact equivalence. This remains a deliberate uncertainty rather than something the system should assume away. citeturn9view0
+**Demo fill interpretation.** Bybit documents Demo capabilities but the reviewed material does not establish perfect production fill/queue/market-impact equivalence. This remains a deliberate uncertainty rather than something the system should assume away. [S20]
 
-**Performance study design.** Predefine which metrics and subgroup analyses will be examined before accumulating enough trades. Looking at dozens of setup/regime subgroups after the fact increases multiple-testing and overfitting risk. citeturn20search3turn20search13
+**Performance study design.** Predefine which metrics and subgroup analyses will be examined before accumulating enough trades. Looking at dozens of setup/regime subgroups after the fact increases multiple-testing and overfitting risk. [S44][S45]
 
 ### Overall verdict
 
-**Verified fact:** The Bybit V5 API presently supplies the public live data and Demo execution primitives required by the proposed V1. citeturn1search0turn2view0turn2view1turn2view2turn5view0turn5view1turn5view2turn9view0
+**Verified fact:** The Bybit V5 API presently supplies the public live data and Demo execution primitives required by the proposed V1. [S3][S5][S9][S12][S15][S13][S14][S20]
 
 **Engineering recommendation:** Proceed without an external market-data provider, database, cloud platform or trading framework.
 
@@ -1951,49 +1953,49 @@ That architecture is substantially more testable and safer than either an autono
 
 Primary Bybit documentation formed the basis of all exchange feasibility conclusions:
 
-- Bybit V5 Get Kline — supported contract categories, intervals and request limits. citeturn1search0
-- Bybit V5 WebSocket Kline — update cadence and closed-candle `confirm` semantics. citeturn6view0
-- Bybit V5 REST Orderbook — snapshot depth, timestamp/sequence fields and RPI exclusion. citeturn2view0
-- Bybit V5 WebSocket Orderbook — depths, update frequencies, snapshot/delta reconstruction and reset behavior. citeturn3view0turn3view1turn3view2
-- Bybit V5 Recent Public Trades — taker side, IDs, timestamps, limits and archive reference. citeturn2view1
-- Bybit V5 Public Trade WebSocket — real-time stream semantics and message sequencing. citeturn3view3turn3view4
-- Bybit V5 Open Interest — intervals, pagination, historical extent and volatility-delay warning. citeturn2view2
-- Bybit V5 Funding Rate History — pagination and instrument-specific funding interval. citeturn5view1
-- Bybit V5 Long Short Ratio — holder-ratio definition, intervals and historical lower bound. citeturn5view2
-- Bybit V5 All Liquidation WebSocket — 500 ms all-liquidation stream. citeturn5view0
-- Bybit V5 Instruments Info — current instrument specification interface and latency warning. citeturn19view0turn21view2
-- Bybit V5 Integration Guidance — endpoint environments, timestamp window and NTP recommendation. citeturn6view1
-- Bybit V5 WebSocket Connect guidance — mainnet/testnet endpoints, heartbeat and reconnect behavior. citeturn6view2turn7view0
-- Bybit V5 Rate Limit Rules — REST/WS connection and endpoint limits. citeturn7view1
-- Bybit Demo Trading Service — Demo REST/private-WS environments, mainnet public stream use, supported endpoints, seven-day retention and unsupported WS order entry. citeturn9view0
-- Bybit V5 Place Order — market/limit behavior, IOC conversion, `orderLinkId`, TP/SL and reduce-only rules. citeturn10view0
-- Bybit V5 Set Trading Stop — position TP/SL semantics and automatic size adjustment. citeturn11view0
-- Bybit V5 Amend/Cancel Order — asynchronous acknowledgement and WS confirmation model. citeturn11view1turn11view2
-- Bybit V5 Get Trade History — execution identifiers, multiple executions per order and ordering caveats. citeturn19view1
-- Bybit V5 Error Codes — permission, environment, duplicate-request, IP and trading errors. citeturn20search2
+- [S3] Bybit V5 Get Kline — supported contract categories, intervals and request limits.
+- [S4] Bybit V5 WebSocket Kline — update cadence and closed-candle `confirm` semantics.
+- [S5] Bybit V5 REST Orderbook — snapshot depth, timestamp/sequence fields and RPI exclusion.
+- [S6] [S7] [S8] Bybit V5 WebSocket Orderbook — depths, update frequencies, snapshot/delta reconstruction and reset behavior.
+- [S9] Bybit V5 Recent Public Trades — taker side, IDs, timestamps, limits and archive reference.
+- [S10] [S11] Bybit V5 Public Trade WebSocket — real-time stream semantics and message sequencing.
+- [S12] Bybit V5 Open Interest — intervals, pagination, historical extent and volatility-delay warning.
+- [S13] Bybit V5 Funding Rate History — pagination and instrument-specific funding interval.
+- [S14] Bybit V5 Long Short Ratio — holder-ratio definition, intervals and historical lower bound.
+- [S15] Bybit V5 All Liquidation WebSocket — 500 ms all-liquidation stream.
+- [S16] [S17] Bybit V5 Instruments Info — current instrument specification interface and latency warning.
+- [S18] Bybit V5 Integration Guidance — endpoint environments, timestamp window and NTP recommendation.
+- Bybit V5 WebSocket Connect guidance — mainnet/testnet endpoints, heartbeat and reconnect behavior. [S1][S2]
+- [S19] Bybit V5 Rate Limit Rules — REST/WS connection and endpoint limits.
+- [S20] Bybit Demo Trading Service — Demo REST/private-WS environments, mainnet public stream use, supported endpoints, seven-day retention and unsupported WS order entry.
+- [S21] Bybit V5 Place Order — market/limit behavior, IOC conversion, `orderLinkId`, TP/SL and reduce-only rules.
+- [S22] Bybit V5 Set Trading Stop — position TP/SL semantics and automatic size adjustment.
+- [S23] [S24] Bybit V5 Amend/Cancel Order — asynchronous acknowledgement and WS confirmation model.
+- [S25] Bybit V5 Get Trade History — execution identifiers, multiple executions per order and ordering caveats.
+- [S26] Bybit V5 Error Codes — permission, environment, duplicate-request, IP and trading errors.
 
 Relevant trading-system engineering sources:
 
-- Freqtrade official repository — dry-run, backtesting, futures support and platform scope. citeturn13search6
-- Freqtrade Backtesting documentation. citeturn13search1
-- Freqtrade Stoploss documentation — exchange-side stops including Bybit futures. citeturn13search2
-- Freqtrade Protections — StoplossGuard, MaxDrawdown and cooldown concepts. citeturn13search3
-- Freqtrade developer documentation — unit/integration testing, exchange tests and incomplete-candle handling. citeturn12search9
-- Freqtrade Lookahead Analysis — explicit lookahead-bias detection tooling. citeturn13search10
-- Hummingbot Connector Architecture — order-book/user-stream separation. citeturn14search1
-- Hummingbot Order Lifecycle — start tracking before exchange submission and maintain lifecycle state. citeturn14search5
-- Hummingbot Strategy V2 architecture — market-data/controller/executor modularity. citeturn14search8
-- Hummingbot Paper Trade documentation. citeturn14search4
-- 3Commas Simple Trading and SmartTrade developer documentation. citeturn15search3turn15search31
-- NautilusTrader official platform material — reusable typed strategy/configuration approach. citeturn16search16
+- [S27] Freqtrade official repository — dry-run, backtesting, futures support and platform scope.
+- [S28] Freqtrade Backtesting documentation.
+- [S29] Freqtrade Stoploss documentation — exchange-side stops including Bybit futures.
+- [S30] Freqtrade Protections — StoplossGuard, MaxDrawdown and cooldown concepts.
+- [S31] Freqtrade developer documentation — unit/integration testing, exchange tests and incomplete-candle handling.
+- [S32] Freqtrade Lookahead Analysis — explicit lookahead-bias detection tooling.
+- [S33] Hummingbot Connector Architecture — order-book/user-stream separation.
+- [S34] Hummingbot Order Lifecycle — start tracking before exchange submission and maintain lifecycle state.
+- [S35] Hummingbot Strategy V2 architecture — market-data/controller/executor modularity.
+- [S36] Hummingbot Paper Trade documentation.
+- [S37] [S38] 3Commas Simple Trading and SmartTrade developer documentation.
+- [S39] NautilusTrader official platform material — reusable typed strategy/configuration approach.
 
 LLM, validation, testing and security sources:
 
-- Kang & Liu, *Deficiency of Large Language Models in Finance: An Empirical Examination of Hallucination* — empirical financial-domain hallucination study. citeturn17academia30
-- Xia et al., *Agentic Trading: When LLM Agents Meet Financial Markets* — 2026 audit/review highlighting reproducibility and evaluation limitations in LLM trading research. citeturn17academia31
-- Pydantic JSON validation documentation — strict structured JSON parsing/validation. citeturn21search6turn21search10
-- Bailey, Borwein, López de Prado & Zhu, *The Probability of Backtest Overfitting* — formal treatment of selection/backtest overfitting. citeturn20search3
-- Bailey & López de Prado, *The Deflated Sharpe Ratio* — selection-bias/backtest-overfitting adjustment research. citeturn20search13
-- GitHub Secret Scanning documentation — repository-history credential detection and rotation guidance. citeturn20search1
-- GitHub Push Protection documentation — preventing recognized secrets from entering repositories. citeturn20search5
-- GitHub secret-storage guidance — no hard-coding, environment/secret storage and regular rotation. citeturn20search20
+- [S40] Kang & Liu, *Deficiency of Large Language Models in Finance: An Empirical Examination of Hallucination* — empirical financial-domain hallucination study.
+- [S41] Xia et al., *Agentic Trading: When LLM Agents Meet Financial Markets* — 2026 audit/review highlighting reproducibility and evaluation limitations in LLM trading research.
+- [S42] [S43] Pydantic JSON validation documentation — strict structured JSON parsing/validation.
+- [S44] Bailey, Borwein, López de Prado & Zhu, *The Probability of Backtest Overfitting* — formal treatment of selection/backtest overfitting.
+- [S45] Bailey & López de Prado, *The Deflated Sharpe Ratio* — selection-bias/backtest-overfitting adjustment research.
+- [S46] GitHub Secret Scanning documentation — repository-history credential detection and rotation guidance.
+- [S47] GitHub Push Protection documentation — preventing recognized secrets from entering repositories.
+- [S48] GitHub secret-storage guidance — no hard-coding, environment/secret storage and regular rotation.

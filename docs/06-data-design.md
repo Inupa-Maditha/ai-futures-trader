@@ -1367,3 +1367,59 @@ PERFORMANCE METRICS
 ```
 
 This schema design is the V1 contract between system modules.
+
+---
+
+# 39. Phase 15 Persistence / Evaluation Implementation Note
+
+The implemented V1 journal uses:
+
+```text
+JSONL = source of truth
+CSV   = human-readable mirror
+```
+
+Journal lifecycle event types include:
+
+```text
+RUN_STARTED
+MARKET_CONTEXT
+DECISION
+RISK_RESULT
+MANUAL_APPROVAL
+EXECUTION_RESULT
+TRADE_OUTCOME
+ERROR
+RUN_FINISHED
+```
+
+Common terminal statuses include:
+
+```text
+NO_TRADE
+DECISION_REJECTED
+RISK_REJECTED
+DEMO_EXECUTION_DISABLED
+MANUALLY_REJECTED
+EXECUTION_UNCERTAIN
+DEMO_ORDER_CONFIRMED
+UNHANDLED_ERROR
+PIPELINE_INCOMPLETE
+TRADE_OUTCOME_RECORDED
+```
+
+The evaluation layer supports:
+
+- Closed-trade PnL metrics
+- Win / loss / breakeven counts
+- Win rate
+- Profit factor
+- Expectancy
+- Average R
+- Best / worst R
+- Maximum drawdown
+- Maximum consecutive losses
+- System / pipeline metrics
+- Equity-curve export
+
+The journal is the durable local research record and must not contain API credentials or authentication secrets.

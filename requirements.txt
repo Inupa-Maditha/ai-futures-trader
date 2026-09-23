@@ -3,4 +3,5 @@ pandas
 numpy
 pydantic
 python-dotenv
+openai
 pytest
