@@ -7,6 +7,7 @@ from pybit.unified_trading import HTTP
 from account_data.bybit_demo import (
     BybitDemoAccountClient,
 )
+
 from account_data.closed_pnl import (
     BybitDemoClosedPnlClient,
 )
@@ -14,11 +15,9 @@ from account_data.closed_pnl import (
 from approval.console import (
     ConsoleManualApprover,
 )
+
 from approval.gate import (
     ManualApprovalGate,
-)
-from approval.schema import (
-    ManualApprovalDecision,
 )
 
 from config.settings import (
@@ -41,15 +40,19 @@ from context_engine.market_context import (
 from decision_engine.llm_service import (
     LLMDecisionService,
 )
+
 from decision_engine.pipeline import (
     DecisionPipeline,
 )
+
 from decision_engine.providers.groq_provider import (
     GroqProvider,
 )
+
 from decision_engine.schema import (
     DecisionAction,
 )
+
 from decision_engine.validator import (
     DecisionValidator,
 )
@@ -57,16 +60,20 @@ from decision_engine.validator import (
 from execution.bybit_demo import (
     BybitDemoExecutionClient,
 )
+
 from execution.coordinator import (
     DemoExecutionCoordinator,
     ExecutionUncertainError,
 )
+
 from execution.order_repository import (
     BybitDemoOrderRepository,
 )
+
 from execution.preflight import (
     DemoExecutionPreflight,
 )
+
 from execution.request_builder import (
     DemoExecutionRequestBuilder,
 )
@@ -74,9 +81,11 @@ from execution.request_builder import (
 from journal.lifecycle import (
     JournalRunLifecycle,
 )
+
 from journal.store import (
     JournalStore,
 )
+
 from journal.trading_journal import (
     TradingRunJournal,
 )
@@ -85,19 +94,31 @@ from market_data.runner import (
     MarketDataRunner,
 )
 
+from orchestration.pipeline import (
+    PipelineOutcome,
+    TradingPipeline,
+)
+
 from risk_manager.account_state_provider import (
     DemoRiskStateProvider,
 )
+
 from risk_manager.bridge import (
     DecisionRiskBridge,
-    RiskBridgeStatus,
 )
+
 from risk_manager.engine import (
     DeterministicRiskEngine,
 )
+
 from risk_manager.instrument_rules import (
     BybitInstrumentRulesClient,
 )
+
+
+# =========================================================
+# Dependency builders
+# =========================================================
 
 
 def build_decision_service():
@@ -107,52 +128,192 @@ def build_decision_service():
         base_url=GROQ_BASE_URL,
     )
 
-    pipeline = DecisionPipeline(
-        validator=DecisionValidator()
+    decision_pipeline = (
+        DecisionPipeline(
+            validator=(
+                DecisionValidator()
+            )
+        )
     )
 
     return LLMDecisionService(
         provider=provider,
-        pipeline=pipeline,
+        pipeline=decision_pipeline,
     )
 
 
 def build_demo_risk_state_provider():
-    account_client = BybitDemoAccountClient(
-        api_key=BYBIT_DEMO_API_KEY,
-        api_secret=BYBIT_DEMO_API_SECRET,
+    account_client = (
+        BybitDemoAccountClient(
+            api_key=(
+                BYBIT_DEMO_API_KEY
+            ),
+
+            api_secret=(
+                BYBIT_DEMO_API_SECRET
+            ),
+        )
     )
 
-    pnl_client = BybitDemoClosedPnlClient(
-        api_key=BYBIT_DEMO_API_KEY,
-        api_secret=BYBIT_DEMO_API_SECRET,
+    pnl_client = (
+        BybitDemoClosedPnlClient(
+            api_key=(
+                BYBIT_DEMO_API_KEY
+            ),
+
+            api_secret=(
+                BYBIT_DEMO_API_SECRET
+            ),
+        )
     )
 
     return DemoRiskStateProvider(
-        account_client=account_client,
-        closed_pnl_client=pnl_client,
+        account_client=(
+            account_client
+        ),
+
+        closed_pnl_client=(
+            pnl_client
+        ),
     )
 
 
-def print_proposal(proposal):
+def build_demo_execution_coordinator():
+    """
+    Build one authenticated Bybit Demo execution
+    stack.
+
+    This function is only called after:
+    - valid trade proposal
+    - deterministic risk approval
+    - execution switch enabled
+    - manual human approval
+    """
+
+    demo_session = HTTP(
+        testnet=False,
+        demo=True,
+
+        api_key=(
+            BYBIT_DEMO_API_KEY
+        ),
+
+        api_secret=(
+            BYBIT_DEMO_API_SECRET
+        ),
+    )
+
+    repository = (
+        BybitDemoOrderRepository(
+            session=demo_session
+        )
+    )
+
+    preflight = (
+        DemoExecutionPreflight(
+            session=demo_session,
+
+            order_repository=(
+                repository
+            ),
+        )
+    )
+
+    execution_client = (
+        BybitDemoExecutionClient(
+            api_key=(
+                BYBIT_DEMO_API_KEY
+            ),
+
+            api_secret=(
+                BYBIT_DEMO_API_SECRET
+            ),
+
+            session=demo_session,
+        )
+    )
+
+    return DemoExecutionCoordinator(
+        execution_client=(
+            execution_client
+        ),
+
+        order_repository=(
+            repository
+        ),
+
+        preflight=preflight,
+
+        confirmation_attempts=6,
+
+        confirmation_interval_seconds=(
+            0.5
+        ),
+    )
+
+
+# =========================================================
+# Console output helpers
+# =========================================================
+
+
+def print_market_context(
+    context,
+):
+    print(
+        "\n=== MARKET CONTEXT ==="
+    )
+
+    print(
+        f"Symbol: {context.symbol}"
+    )
+
+    print(
+        "Alignment: "
+        f"{context.technical.trend_alignment.value}"
+    )
+
+    print(
+        "15m: "
+        f"{context.technical.timeframe_15m.trend.value}"
+    )
+
+    print(
+        "1h: "
+        f"{context.technical.timeframe_1h.trend.value}"
+    )
+
+    print(
+        "4h: "
+        f"{context.technical.timeframe_4h.trend.value}"
+    )
+
+
+def print_proposal(
+    proposal,
+):
     print(
         "\n=== LLM PROPOSAL ==="
     )
 
     print(
-        f"Action: {proposal.action.value}"
+        f"Action: "
+        f"{proposal.action.value}"
     )
 
     print(
-        f"Quality: {proposal.setup_quality.value}"
+        f"Quality: "
+        f"{proposal.setup_quality.value}"
     )
 
     print(
-        f"Confidence: {proposal.confidence}"
+        f"Confidence: "
+        f"{proposal.confidence}"
     )
 
     print(
-        f"Thesis: {proposal.thesis}"
+        f"Thesis: "
+        f"{proposal.thesis}"
     )
 
     if (
@@ -160,28 +321,90 @@ def print_proposal(proposal):
         == DecisionAction.NO_TRADE
     ):
         print(
-            f"No Trade Reason: "
+            "No Trade Reason: "
             f"{proposal.no_trade_reason}"
         )
 
         return
 
     print(
-        f"Entry: {proposal.entry_price}"
+        f"Entry: "
+        f"{proposal.entry_price}"
     )
 
     print(
-        f"Stop Loss: {proposal.stop_loss}"
+        f"Stop Loss: "
+        f"{proposal.stop_loss}"
     )
 
     print(
-        f"Take Profit: {proposal.take_profit}"
+        f"Take Profit: "
+        f"{proposal.take_profit}"
     )
 
 
-def print_risk_plan(plan):
+def print_account_state(
+    state,
+):
     print(
-        "\n=== DETERMINISTIC RISK PLAN ==="
+        "\n=== DEMO ACCOUNT ==="
+    )
+
+    print(
+        "Equity: "
+        f"{state.account_equity}"
+    )
+
+    print(
+        "Available Balance: "
+        f"{state.available_balance}"
+    )
+
+    print(
+        "Open Positions: "
+        f"{state.open_position_count}"
+    )
+
+    print(
+        "Today's Realized PnL: "
+        f"{state.daily_realized_pnl}"
+    )
+
+
+def print_risk_result(
+    bridge_result,
+):
+    risk_result = (
+        bridge_result.risk_result
+    )
+
+    if risk_result is None:
+        return
+
+    if risk_result.plan is None:
+        print(
+            "\n=== DETERMINISTIC "
+            "RISK RESULT ==="
+        )
+
+        print(
+            "RISK_REJECTED"
+        )
+
+        for reason in (
+            risk_result.reasons
+        ):
+            print(
+                f"- {reason}"
+            )
+
+        return
+
+    plan = risk_result.plan
+
+    print(
+        "\n=== DETERMINISTIC "
+        "RISK PLAN ==="
     )
 
     print(
@@ -193,40 +416,42 @@ def print_risk_plan(plan):
     )
 
     print(
-        f"Stop Loss: {plan.stop_loss}"
+        f"Stop Loss: "
+        f"{plan.stop_loss}"
     )
 
     print(
-        f"Take Profit: {plan.take_profit}"
+        f"Take Profit: "
+        f"{plan.take_profit}"
     )
 
     print(
-        f"Quantity: "
+        "Quantity: "
         f"{plan.executable_quantity} BTC"
     )
 
     print(
-        f"Risk Budget: "
+        "Risk Budget: "
         f"{plan.risk_amount}"
     )
 
     print(
-        f"Actual Risk: "
+        "Actual Risk: "
         f"{plan.actual_risk_amount}"
     )
 
     print(
-        f"Reward/Risk: "
+        "Reward/Risk: "
         f"{plan.reward_risk_ratio}"
     )
 
     print(
-        f"Notional: "
+        "Notional: "
         f"{plan.position_notional}"
     )
 
     print(
-        f"Required Margin: "
+        "Required Margin: "
         f"{plan.required_margin}"
     )
 
@@ -236,196 +461,335 @@ def print_risk_plan(plan):
     )
 
 
-def run_pipeline(
-    journal: TradingRunJournal,
+def print_execution_request(
+    request,
 ):
-    runner = MarketDataRunner(
-        rest_poll_seconds=60
+    print(
+        "\n=== EXECUTION REQUEST ==="
     )
 
-    try:
-        # -------------------------------------------------
-        # 1. Public market data
-        # -------------------------------------------------
+    print(
+        "OrderLinkId: "
+        f"{request.order_link_id}"
+    )
 
-        runner.start()
+    print(
+        f"Side: "
+        f"{request.side.value}"
+    )
+
+    print(
+        "Quantity: "
+        f"{request.quantity}"
+    )
+
+    print(
+        "Limit Price: "
+        f"{request.entry_price}"
+    )
+
+    print(
+        "Stop Loss: "
+        f"{request.stop_loss}"
+    )
+
+    print(
+        "Take Profit: "
+        f"{request.take_profit}"
+    )
+
+
+def print_final_outcome(
+    outcome: PipelineOutcome,
+):
+    print(
+        "\n=== FINAL STATUS ==="
+    )
+
+    print(
+        outcome.status
+    )
+
+    if (
+        outcome.status
+        == "DECISION_REJECTED"
+    ):
+        error = getattr(
+            outcome.decision_result,
+            "error",
+            None,
+        )
+
+        if error:
+            print(
+                f"Error: {error}"
+            )
 
         print(
-            "\nCollecting live market data..."
+            "\nNo order submitted."
         )
 
-        sleep(5)
+        return
 
-        # -------------------------------------------------
-        # 2. Build market context
-        # -------------------------------------------------
-
-        context = MarketContextBuilder(
-            runner=runner,
-            orderbook_depth_levels=10,
-        ).build(
-            require_healthy=True
+    if (
+        outcome.status
+        == "NO_TRADE"
+    ):
+        print(
+            "\nNo approval requested."
         )
 
-        journal.record_market_context(
+        print(
+            "No order submitted."
+        )
+
+        return
+
+    if (
+        outcome.status
+        == "RISK_REJECTED"
+    ):
+        print(
+            "\nNo approval requested."
+        )
+
+        print(
+            "No order submitted."
+        )
+
+        return
+
+    if (
+        outcome.status
+        == "DEMO_EXECUTION_DISABLED"
+    ):
+        print(
+            "\nRisk-approved trade found, "
+            "but Demo execution is disabled."
+        )
+
+        print(
+            "No manual approval requested."
+        )
+
+        print(
+            "No order submitted."
+        )
+
+        return
+
+    if (
+        outcome.status
+        == "MANUALLY_REJECTED"
+    ):
+        print(
+            "\nNo order submitted."
+        )
+
+        return
+
+    if (
+        outcome.status
+        == "EXECUTION_UNCERTAIN"
+    ):
+        print(
+            "\nOrder state is uncertain."
+        )
+
+        print(
+            "DO NOT manually retry "
+            "this approval/orderLinkId."
+        )
+
+        return
+
+    if (
+        outcome.status
+        != "DEMO_ORDER_CONFIRMED"
+    ):
+        return
+
+    result = (
+        outcome.execution_result
+    )
+
+    if result is None:
+        raise RuntimeError(
+            "DEMO_ORDER_CONFIRMED "
+            "without execution result."
+        )
+
+    observed = (
+        result.observed_order
+    )
+
+    print(
+        "\n=== EXECUTION RESULT ==="
+    )
+
+    print(
+        "Coordinator Status: "
+        f"{result.status.value}"
+    )
+
+    print(
+        f"Order ID: "
+        f"{observed.order_id}"
+    )
+
+    print(
+        "OrderLinkId: "
+        f"{observed.order_link_id}"
+    )
+
+    print(
+        "Order Status: "
+        f"{observed.order_status}"
+    )
+
+    print(
+        f"Side: "
+        f"{observed.side}"
+    )
+
+    print(
+        "Quantity: "
+        f"{observed.quantity}"
+    )
+
+    print(
+        f"Price: "
+        f"{observed.price}"
+    )
+
+    if (
+        observed.order_status
+        == "Filled"
+    ):
+        print(
+            "Entry is filled."
+        )
+
+    elif (
+        observed.order_status
+        == "PartiallyFilled"
+    ):
+        print(
+            "Entry is partially filled."
+        )
+
+    elif (
+        observed.order_status
+        == "New"
+    ):
+        print(
+            "Limit entry is active "
+            "and waiting for a fill."
+        )
+
+    else:
+        print(
+            "Final observed status: "
+            f"{observed.order_status}"
+        )
+
+
+# =========================================================
+# Real production dependency adapters
+# =========================================================
+
+
+def build_trading_pipeline(
+    *,
+    journal: TradingRunJournal,
+    runner: MarketDataRunner,
+) -> TradingPipeline:
+
+    decision_service = (
+        build_decision_service()
+    )
+
+    risk_state_provider = (
+        build_demo_risk_state_provider()
+    )
+
+    instrument_rules_client = (
+        BybitInstrumentRulesClient()
+    )
+
+    approval_gate = (
+        ManualApprovalGate()
+    )
+
+    approver = (
+        ConsoleManualApprover(
+            gate=approval_gate
+        )
+    )
+
+    request_builder = (
+        DemoExecutionRequestBuilder()
+    )
+
+    def market_context_provider():
+        context = (
+            MarketContextBuilder(
+                runner=runner,
+                orderbook_depth_levels=10,
+            )
+            .build(
+                require_healthy=True
+            )
+        )
+
+        print_market_context(
             context
         )
 
+        return context
+
+    def decision_provider(
+        context,
+    ):
         print(
-            "\n=== MARKET CONTEXT ==="
+            f"\nCalling Groq: "
+            f"{GROQ_MODEL}"
         )
 
-        print(
-            f"Symbol: {context.symbol}"
-        )
-
-        print(
-            f"Alignment: "
-            f"{context.technical.trend_alignment.value}"
-        )
-
-        print(
-            f"15m: "
-            f"{context.technical.timeframe_15m.trend.value}"
-        )
-
-        print(
-            f"1h: "
-            f"{context.technical.timeframe_1h.trend.value}"
-        )
-
-        print(
-            f"4h: "
-            f"{context.technical.timeframe_4h.trend.value}"
-        )
-
-        # -------------------------------------------------
-        # 3. Groq decision
-        # -------------------------------------------------
-
-        print(
-            f"\nCalling Groq: {GROQ_MODEL}"
-        )
-
-        decision_result = (
-            build_decision_service()
+        result = (
+            decision_service
             .decide(context)
         )
 
-        journal.record_decision(
-            decision_result
-        )
-
         if (
-            not decision_result.accepted
-            or decision_result.proposal is None
+            result.accepted
+            and result.proposal
+            is not None
         ):
-            print(
-                "\n=== FINAL STATUS ==="
+            print_proposal(
+                result.proposal
             )
 
-            print(
-                "DECISION_REJECTED"
-            )
+        return result
 
-            print(
-                f"Error: "
-                f"{decision_result.error}"
-            )
-
-            journal.finish(
-                status="DECISION_REJECTED"
-            )
-
-            print(
-                "\nNo order submitted."
-            )
-
-            return
-
-        proposal = (
-            decision_result.proposal
-        )
-
-        print_proposal(
-            proposal
-        )
-
-        # -------------------------------------------------
-        # 4. NO_TRADE
-        # -------------------------------------------------
-
-        if (
-            proposal.action
-            == DecisionAction.NO_TRADE
-        ):
-            journal.finish(
-                status="NO_TRADE"
-            )
-
-            print(
-                "\n=== FINAL STATUS ==="
-            )
-
-            print(
-                "NO_TRADE"
-            )
-
-            print(
-                "\nNo approval requested."
-            )
-
-            print(
-                "No order submitted."
-            )
-
-            return
-
-        # -------------------------------------------------
-        # 5. Fresh Demo account state
-        # -------------------------------------------------
-
-        risk_state = (
-            build_demo_risk_state_provider()
+    def risk_provider(
+        proposal,
+    ):
+        state = (
+            risk_state_provider
             .get_state(SYMBOL)
         )
 
-        print(
-            "\n=== DEMO ACCOUNT ==="
+        print_account_state(
+            state
         )
-
-        print(
-            f"Equity: "
-            f"{risk_state.account_equity}"
-        )
-
-        print(
-            f"Available Balance: "
-            f"{risk_state.available_balance}"
-        )
-
-        print(
-            f"Open Positions: "
-            f"{risk_state.open_position_count}"
-        )
-
-        print(
-            f"Today's Realized PnL: "
-            f"{risk_state.daily_realized_pnl}"
-        )
-
-        # -------------------------------------------------
-        # 6. Current exchange rules
-        # -------------------------------------------------
 
         rules = (
-            BybitInstrumentRulesClient()
-            .get_linear_rules(SYMBOL)
+            instrument_rules_client
+            .get_linear_rules(
+                SYMBOL
+            )
         )
-
-        # -------------------------------------------------
-        # 7. Deterministic risk evaluation
-        # -------------------------------------------------
 
         risk_engine = (
             DeterministicRiskEngine(
@@ -433,128 +797,42 @@ def run_pipeline(
             )
         )
 
-        bridge = DecisionRiskBridge(
-            risk_engine=risk_engine
+        bridge = (
+            DecisionRiskBridge(
+                risk_engine=(
+                    risk_engine
+                )
+            )
         )
 
-        bridge_result = bridge.evaluate(
+        result = bridge.evaluate(
             proposal=proposal,
-            account=risk_state,
+            account=state,
         )
 
-        journal.record_risk(
-            bridge_result
+        print_risk_result(
+            result
         )
 
-        if (
-            bridge_result.status
-            != RiskBridgeStatus.RISK_APPROVED
-        ):
-            print(
-                "\n=== FINAL STATUS ==="
-            )
+        return result
 
-            print(
-                "RISK_REJECTED"
-            )
-
-            if (
-                bridge_result.risk_result
-                is not None
-            ):
-                for reason in (
-                    bridge_result
-                    .risk_result
-                    .reasons
-                ):
-                    print(
-                        f"- {reason}"
-                    )
-
-            journal.finish(
-                status="RISK_REJECTED"
-            )
-
-            print(
-                "\nNo order submitted."
-            )
-
-            return
-
-        if (
-            bridge_result.risk_result
-            is None
-        ):
-            raise RuntimeError(
-                "RISK_APPROVED result is "
-                "missing risk_result."
-            )
-
-        plan = (
-            bridge_result
-            .risk_result
-            .plan
-        )
-
-        if plan is None:
-            raise RuntimeError(
-                "Risk approval did not "
-                "contain a risk plan."
-            )
-
-        print_risk_plan(
-            plan
-        )
-
-        # -------------------------------------------------
-        # 8. Execution safety switch
-        # -------------------------------------------------
-
+    def execution_enabled_provider():
         if not ENABLE_DEMO_EXECUTION:
-            print(
-                "\n=== FINAL STATUS ==="
-            )
+            return False
 
-            print(
-                "DEMO_EXECUTION_DISABLED"
-            )
-
-            print(
-                "\nRisk-approved trade found, "
-                "but Demo execution is disabled."
-            )
-
-            print(
-                "No manual approval requested."
-            )
-
-            print(
-                "No order submitted."
-            )
-
-            journal.finish(
-                status="DEMO_EXECUTION_DISABLED"
-            )
-
-            return
-
+        # Reuse the existing explicit
+        # configuration guard.
         validate_demo_execution_enabled()
 
-        # -------------------------------------------------
-        # 9. Manual approval
-        # -------------------------------------------------
+        return True
 
-        gate = ManualApprovalGate()
-
+    def approval_provider(
+        risk_result,
+    ):
         approval_request = (
-            gate.create_request(
-                bridge_result
-            )
-        )
-
-        approver = (
-            ConsoleManualApprover(
-                gate=gate
+            approval_gate
+            .create_request(
+                risk_result
             )
         )
 
@@ -564,260 +842,120 @@ def run_pipeline(
             )
         )
 
-        journal.record_manual_approval(
-            approval_request=approval_request,
-            approval_result=approval_result,
+        return (
+            approval_request,
+            approval_result,
         )
 
-        if (
-            approval_result.decision
-            != ManualApprovalDecision.APPROVE
-        ):
-            journal.finish(
-                status="MANUALLY_REJECTED"
-            )
-
-            print(
-                "\n=== FINAL STATUS ==="
-            )
-
-            print(
-                "MANUALLY_REJECTED"
-            )
-
-            print(
-                "\nNo order submitted."
-            )
-
-            return
-
-        # -------------------------------------------------
-        # 10. Build immutable execution request
-        # -------------------------------------------------
-
-        execution_request = (
-            DemoExecutionRequestBuilder()
-            .build(
+    def execution_request_provider(
+        approval_request,
+        approval_result,
+    ):
+        request = (
+            request_builder.build(
                 approval_request,
                 approval_result,
             )
         )
 
+        print_execution_request(
+            request
+        )
+
+        return request
+
+    def execution_provider(
+        request,
+    ):
         print(
-            "\n=== EXECUTION REQUEST ==="
-        )
-
-        print(
-            f"OrderLinkId: "
-            f"{execution_request.order_link_id}"
-        )
-
-        print(
-            f"Side: "
-            f"{execution_request.side.value}"
-        )
-
-        print(
-            f"Quantity: "
-            f"{execution_request.quantity}"
-        )
-
-        print(
-            f"Limit Price: "
-            f"{execution_request.entry_price}"
-        )
-
-        print(
-            f"Stop Loss: "
-            f"{execution_request.stop_loss}"
-        )
-
-        print(
-            f"Take Profit: "
-            f"{execution_request.take_profit}"
-        )
-
-        # -------------------------------------------------
-        # 11. Authenticated Demo session
-        # -------------------------------------------------
-
-        demo_session = HTTP(
-            testnet=False,
-            demo=True,
-            api_key=BYBIT_DEMO_API_KEY,
-            api_secret=BYBIT_DEMO_API_SECRET,
-        )
-
-        repository = (
-            BybitDemoOrderRepository(
-                session=demo_session
-            )
-        )
-
-        preflight = (
-            DemoExecutionPreflight(
-                session=demo_session,
-                order_repository=repository,
-            )
-        )
-
-        execution_client = (
-            BybitDemoExecutionClient(
-                api_key=BYBIT_DEMO_API_KEY,
-                api_secret=BYBIT_DEMO_API_SECRET,
-                session=demo_session,
-            )
+            "\nSubmitting "
+            "Bybit Demo order..."
         )
 
         coordinator = (
-            DemoExecutionCoordinator(
-                execution_client=execution_client,
-                order_repository=repository,
-                preflight=preflight,
-                confirmation_attempts=6,
-                confirmation_interval_seconds=0.5,
-            )
+            build_demo_execution_coordinator()
         )
 
-        # -------------------------------------------------
-        # 12. Controlled Demo execution
-        # -------------------------------------------------
+        return coordinator.execute(
+            request
+        )
+
+    return TradingPipeline(
+        journal=journal,
+
+        market_context_provider=(
+            market_context_provider
+        ),
+
+        decision_provider=(
+            decision_provider
+        ),
+
+        risk_provider=(
+            risk_provider
+        ),
+
+        execution_enabled_provider=(
+            execution_enabled_provider
+        ),
+
+        approval_provider=(
+            approval_provider
+        ),
+
+        execution_request_provider=(
+            execution_request_provider
+        ),
+
+        execution_provider=(
+            execution_provider
+        ),
+
+        execution_uncertain_exceptions=(
+            ExecutionUncertainError,
+        ),
+    )
+
+
+# =========================================================
+# Real journaled pipeline run
+# =========================================================
+
+
+def run_pipeline(
+    journal: TradingRunJournal,
+) -> PipelineOutcome:
+
+    runner = MarketDataRunner(
+        rest_poll_seconds=60
+    )
+
+    try:
+        runner.start()
 
         print(
-            "\nSubmitting Bybit Demo order..."
+            "\nCollecting live "
+            "market data..."
         )
 
-        try:
-            execution_result = (
-                coordinator.execute(
-                    execution_request
-                )
+        sleep(5)
+
+        pipeline = (
+            build_trading_pipeline(
+                journal=journal,
+                runner=runner,
             )
-
-        except ExecutionUncertainError as exc:
-            journal.record_error(
-                stage="EXECUTION",
-                error=exc,
-            )
-
-            journal.finish(
-                status="EXECUTION_UNCERTAIN"
-            )
-
-            print(
-                "\n=== FINAL STATUS ==="
-            )
-
-            print(
-                "EXECUTION_UNCERTAIN"
-            )
-
-            print(
-                str(exc)
-            )
-
-            print(
-                "\nDO NOT manually retry "
-                "this approval/orderLinkId."
-            )
-
-            return
-
-        # -------------------------------------------------
-        # 13. Record confirmed execution
-        # -------------------------------------------------
-
-        journal.record_execution(
-            execution_request=execution_request,
-            execution_result=execution_result,
         )
 
-        observed = (
-            execution_result
-            .observed_order
+        outcome = (
+            pipeline.run()
         )
 
-        print(
-            "\n=== EXECUTION RESULT ==="
+        print_final_outcome(
+            outcome
         )
 
-        print(
-            f"Coordinator Status: "
-            f"{execution_result.status.value}"
-        )
-
-        print(
-            f"Order ID: "
-            f"{observed.order_id}"
-        )
-
-        print(
-            f"OrderLinkId: "
-            f"{observed.order_link_id}"
-        )
-
-        print(
-            f"Order Status: "
-            f"{observed.order_status}"
-        )
-
-        print(
-            f"Side: "
-            f"{observed.side}"
-        )
-
-        print(
-            f"Quantity: "
-            f"{observed.quantity}"
-        )
-
-        print(
-            f"Price: "
-            f"{observed.price}"
-        )
-
-        journal.finish(
-            status="DEMO_ORDER_CONFIRMED"
-        )
-
-        print(
-            "\n=== FINAL STATUS ==="
-        )
-
-        print(
-            "DEMO_ORDER_CONFIRMED"
-        )
-
-        if (
-            observed.order_status
-            == "Filled"
-        ):
-            print(
-                "Entry is filled."
-            )
-
-        elif (
-            observed.order_status
-            == "PartiallyFilled"
-        ):
-            print(
-                "Entry is partially filled."
-            )
-
-        elif (
-            observed.order_status
-            == "New"
-        ):
-            print(
-                "Limit entry is active "
-                "and waiting for a fill."
-            )
-
-        else:
-            print(
-                "Final observed status: "
-                f"{observed.order_status}"
-            )
+        return outcome
 
     finally:
         runner.stop()
@@ -825,8 +963,9 @@ def run_pipeline(
 
 def main():
     print(
-        "=== Sprint 6 — "
-        "Journaled Bybit Demo Pipeline ==="
+        "=== Phase 15 — "
+        "Integrated Journaled "
+        "Bybit Demo Pipeline ==="
     )
 
     print(
@@ -839,18 +978,11 @@ def main():
         "manual approval."
     )
 
-    # -------------------------------------------------
-    # Configuration checks happen before journal start.
-    # Invalid configuration is not considered a
-    # trading-run event.
-    # -------------------------------------------------
-
+    # Configuration validation happens
+    # before RUN_STARTED.
     validate_groq_settings()
-    validate_bybit_demo_settings()
 
-    # -------------------------------------------------
-    # Start persistent run journal
-    # -------------------------------------------------
+    validate_bybit_demo_settings()
 
     journal = TradingRunJournal(
         store=JournalStore(),
@@ -862,24 +994,14 @@ def main():
     )
 
     print(
-        f"\nJournal Run ID: "
+        "\nJournal Run ID: "
         f"{journal.run_id}"
     )
 
-    # -------------------------------------------------
-    # Fail-safe lifecycle
-    #
-    # Any unexpected exception after RUN_STARTED:
-    #
-    # ERROR
-    # ↓
-    # RUN_FINISHED
-    # ↓
-    # UNHANDLED_ERROR
-    # -------------------------------------------------
-
-    lifecycle = JournalRunLifecycle(
-        journal
+    lifecycle = (
+        JournalRunLifecycle(
+            journal
+        )
     )
 
     lifecycle.run(
