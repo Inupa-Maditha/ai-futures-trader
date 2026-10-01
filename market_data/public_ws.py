@@ -32,6 +32,17 @@ from market_data.trades import (
     TradeFlow,
 )
 
+from time import sleep
+
+WS_START_ATTEMPTS = 4
+
+WS_START_BACKOFF_SECONDS = (
+    5,
+    15,
+    30,
+)
+
+PYBIT_RETRIES_PER_ATTEMPT = 3
 
 INTERVAL_TO_HEALTH_SOURCE = {
     "15": "kline_15m",
@@ -61,12 +72,76 @@ class BybitPublicWebSocket:
         #
         # Keep these values explicit so the V1
         # reconnect policy is visible in our code.
-        self.ws = WebSocket(
-            testnet=False,
-            channel_type="linear",
-            restart_on_error=True,
-            retries=10,
+        self.ws = (
+            self._connect_with_backoff()
         )
+
+    def _connect_with_backoff(
+        self,
+    ):
+        last_error = None
+
+        for attempt in range(
+            1,
+            WS_START_ATTEMPTS + 1,
+        ):
+            try:
+                print(
+                    "[WS START] "
+                    f"Connection attempt "
+                    f"{attempt}/"
+                    f"{WS_START_ATTEMPTS}"
+                )
+
+                websocket = WebSocket(
+                    testnet=False,
+                    channel_type="linear",
+                    restart_on_error=True,
+                    retries=(
+                        PYBIT_RETRIES_PER_ATTEMPT
+                    ),
+                )
+
+                print(
+                    "[WS START] Connected."
+                )
+
+                return websocket
+
+            except Exception as exc:
+                last_error = exc
+
+                if (
+                    attempt
+                    >= WS_START_ATTEMPTS
+                ):
+                    break
+
+                delay = (
+                    WS_START_BACKOFF_SECONDS[
+                        attempt - 1
+                    ]
+                )
+
+                print(
+                    "[WS START WARNING] "
+                    f"{type(exc).__name__}: "
+                    f"{exc}"
+                )
+
+                print(
+                    "[WS START] "
+                    f"Retrying in {delay}s..."
+                )
+
+                sleep(delay)
+
+        raise RuntimeError(
+            "Unable to establish Bybit "
+            "public WebSocket after "
+            f"{WS_START_ATTEMPTS} "
+            "bounded startup attempts."
+        ) from last_error
 
     def is_connected(
         self,
