@@ -6,6 +6,11 @@ from decision_engine.prompt_builder import (
     LLMPromptPackage,
 )
 
+from openai import (
+    BadRequestError,
+    OpenAI,
+)
+
 
 class GroqProvider:
     def __init__(
@@ -55,48 +60,69 @@ class GroqProvider:
             evidence_values=evidence_values,
         )
 
-        response = (
-            self.client
-            .chat.completions
-            .create(
-                model=self.model,
+        request_kwargs = {
+            "model": self.model,
 
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            package.system_prompt
-                        ),
-                    },
-                    {
-                        "role": "user",
-                        "content": (
-                            package.user_json()
-                        ),
-                    },
-                ],
-
-                response_format={
-                    "type": "json_schema",
-
-                    "json_schema": {
-                        "name": (
-                            "decision_proposal"
-                        ),
-
-                        "strict": True,
-
-                        "schema": schema,
-                    },
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        package.system_prompt
+                    ),
                 },
+                {
+                    "role": "user",
+                    "content": (
+                        package.user_json()
+                    ),
+                },
+            ],
 
-                temperature=0,
+            "response_format": {
+                "type": "json_schema",
 
-                reasoning_effort="low",
+                "json_schema": {
+                    "name": (
+                        "decision_proposal"
+                    ),
 
-                max_completion_tokens=2000,
-            )
-        )
+                    "strict": True,
+
+                    "schema": schema,
+                },
+            },
+
+            "temperature": 0,
+
+            "reasoning_effort": "low",
+
+            "max_completion_tokens": 2000,
+        }
+
+        response = None
+
+        for attempt in range(2):
+            try:
+                response = (
+                    self.client
+                    .chat.completions
+                    .create(
+                        **request_kwargs
+                    )
+                )
+
+                break
+
+            except BadRequestError as exc:
+                if (
+                    attempt == 0
+                    and self._is_json_validation_error(
+                        exc
+                    )
+                ):
+                    continue
+
+                raise
 
         raw_output = (
             response
@@ -112,6 +138,49 @@ class GroqProvider:
             )
 
         return raw_output
+    
+    @staticmethod
+    def _is_json_validation_error(
+        exc: BadRequestError,
+    ) -> bool:
+
+        if (
+            getattr(
+                exc,
+                "code",
+                None,
+            )
+            == "json_validate_failed"
+        ):
+            return True
+
+        body = getattr(
+            exc,
+            "body",
+            None,
+        )
+
+        if not isinstance(
+            body,
+            dict,
+        ):
+            return False
+
+        if (
+            body.get("code")
+            == "json_validate_failed"
+        ):
+            return True
+
+        error = body.get(
+            "error"
+        )
+
+        return (
+            isinstance(error, dict)
+            and error.get("code")
+            == "json_validate_failed"
+        )
 
     @staticmethod
     def _build_schema(
@@ -163,8 +232,8 @@ class GroqProvider:
 
                 "evidence": {
                     "type": "array",
-                    "minItems": 1,
-                    "maxItems": 6,
+                    "minItems": 4,
+                    "maxItems": 4,
 
                     "items": {
                         "type": "object",

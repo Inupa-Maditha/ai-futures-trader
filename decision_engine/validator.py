@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from dataclasses import dataclass
 from datetime import (
     datetime,
@@ -126,7 +128,66 @@ class DecisionValidator:
                 reasons=tuple(reasons),
             )
 
-        # 6. Entry sanity check
+        # # Trade thesis must not reference
+        # # EMA evidence unless an EMA item
+        # # was actually selected.
+        # thesis_lower = (
+        #     proposal.thesis.lower()
+        # )
+
+        # selected_paths = {
+        #     item.context_path
+        #     for item in proposal.evidence
+        # }
+
+        # selected_has_ema = any(
+        #     ".ema_" in path
+        #     for path in selected_paths
+        # )
+
+        # if (
+        #     "ema" in thesis_lower
+        #     and not selected_has_ema
+        # ):
+        #     reasons.append(
+        #         "Thesis references EMA evidence "
+        #         "that was not selected."
+        #     )
+
+        # 6. Trade invalidation must reference
+        # the proposed stop-loss price.
+        invalidation = (
+            proposal.invalidation_reason
+            or ""
+        )
+
+        numeric_values = re.findall(
+            r"\d[\d,]*(?:\.\d+)?",
+            invalidation,
+        )
+
+        stop_loss = float(
+            proposal.stop_loss
+        )
+
+        references_stop_loss = any(
+            abs(
+                float(
+                    value.replace(",", "")
+                )
+                - stop_loss
+            )
+            < 1e-8
+            for value in numeric_values
+        )
+
+        if not references_stop_loss:
+            reasons.append(
+                "Invalidation reason must reference "
+                "the proposed stop loss."
+            )
+
+        # 7. Entry sanity check
         mid_price = (
             context.orderbook.mid_price
         )

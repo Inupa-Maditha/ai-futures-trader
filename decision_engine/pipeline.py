@@ -12,6 +12,7 @@ from decision_engine.parser import (
 )
 
 from decision_engine.schema import (
+    DecisionAction,
     DecisionProposal,
 )
 
@@ -88,6 +89,27 @@ class DecisionPipeline:
                     "Decision proposal failed "
                     "deterministic validation."
                 ),
+            )
+        
+        # Build an authoritative thesis only
+        # from deterministically grounded
+        # selected evidence.
+        if (
+            proposal.action
+            != DecisionAction.NO_TRADE
+        ):
+            grounded_thesis = ", ".join(
+                (
+                    f"{item.context_path}"
+                    f"={item.value}"
+                )
+                for item in proposal.evidence
+            )
+
+            proposal = proposal.model_copy(
+                update={
+                    "thesis": grounded_thesis,
+                }
             )
 
         return DecisionPipelineResult(

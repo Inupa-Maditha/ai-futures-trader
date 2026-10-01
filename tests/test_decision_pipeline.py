@@ -136,7 +136,7 @@ def test_valid_long_is_accepted():
       "entry_price": 85000,
       "stop_loss": 84500,
       "take_profit": 86000,
-      "invalidation_reason": "Bullish structure fails.",
+      "invalidation_reason": "Trade is invalid if price reaches stop loss 84500.",
       "no_trade_reason": null
     }
     """
@@ -396,4 +396,118 @@ def test_unhealthy_context_is_rejected():
     assert (
         "Required market data is unhealthy."
         in result.validation.reasons
+    )
+
+def test_trade_invalidation_must_reference_stop_loss():
+    raw = """
+    {
+      "schema_version": "1.0",
+      "symbol": "BTCUSDT",
+      "action": "SHORT",
+      "setup_quality": "HIGH",
+      "confidence": 0.8,
+      "thesis": "Bearish setup.",
+      "evidence": [
+        {
+          "context_path": "technical.15m.trend",
+          "value": "BEARISH",
+          "direction": "BEARISH",
+          "interpretation": "The 15m trend is bearish."
+        }
+      ],
+      "entry_price": 85000,
+      "stop_loss": 85500,
+      "take_profit": 84000,
+      "invalidation_reason": "Price is below EMA20.",
+      "no_trade_reason": null
+    }
+    """
+
+    result = DecisionPipeline().process(
+        raw,
+        make_context(),
+    )
+
+    assert result.accepted is False
+
+    assert (
+        "Invalidation reason must reference "
+        "the proposed stop loss."
+        in result.validation.reasons
+    )
+
+# def test_trade_thesis_rejects_unselected_ema_claim():
+#     raw = """
+#     {
+#       "schema_version": "1.0",
+#       "symbol": "BTCUSDT",
+#       "action": "LONG",
+#       "setup_quality": "HIGH",
+#       "confidence": 0.9,
+#       "thesis": "Bullish setup with price above EMA20.",
+#       "evidence": [
+#         {
+#           "context_path": "technical.15m.trend",
+#           "value": "BEARISH",
+#           "direction": "BEARISH",
+#           "interpretation": "15m trend."
+#         }
+#       ],
+#       "entry_price": 85000,
+#       "stop_loss": 84500,
+#       "take_profit": 86000,
+#       "invalidation_reason": "Trade is invalid if price reaches stop loss 84500.",
+#       "no_trade_reason": null
+#     }
+#     """
+
+#     result = DecisionPipeline().process(
+#         raw,
+#         make_context(),
+#     )
+
+#     assert result.accepted is False
+
+#     assert (
+#         "Thesis references EMA evidence "
+#         "that was not selected."
+#         in result.validation.reasons
+#     )
+
+def test_accepted_trade_thesis_is_built_from_selected_evidence():
+    raw = """
+    {
+      "schema_version": "1.0",
+      "symbol": "BTCUSDT",
+      "action": "LONG",
+      "setup_quality": "HIGH",
+      "confidence": 0.9,
+      "thesis": "Price is above EMA20 and BOS is bullish.",
+      "evidence": [
+        {
+          "context_path": "technical.1h.trend",
+          "value": "BULLISH",
+          "direction": "BULLISH",
+          "interpretation": "The 1h trend is bullish."
+        }
+      ],
+      "entry_price": 85000,
+      "stop_loss": 84500,
+      "take_profit": 86000,
+      "invalidation_reason": "Trade is invalid if price reaches stop loss 84500.",
+      "no_trade_reason": null
+    }
+    """
+
+    result = DecisionPipeline().process(
+        raw,
+        make_context(),
+    )
+
+    assert result.accepted is True
+    assert result.proposal is not None
+
+    assert (
+        result.proposal.thesis
+        == "technical.1h.trend=BULLISH"
     )
