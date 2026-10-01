@@ -69,6 +69,7 @@ Track important non-execution outcomes so the dataset is not limited to winners 
 | Date/Time UTC | Run ID | Outcome | Reason |
 |---|---|---|---|
 | | | NO_TRADE / DECISION_REJECTED / RISK_REJECTED / DEMO_EXECUTION_DISABLED / MANUALLY_REJECTED | |
+| 2026-10-01T16:17:32.158532+00:00 | 7816237648a64355b28cad76d41375a6 | NO_TRADE | Mixed technical and market signals did not provide a clear directional bias. |
 
 ---
 
