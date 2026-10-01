@@ -105,3 +105,42 @@ PENDING
 ```
 
 Phase 16 is ready for final evaluation when the forward-demo sample is large enough for the intended level of conclusion and the full dataset has been retained without cherry-picking.
+
+---
+
+## Batch History
+
+### P16-B01 — V1.0
+
+Status: SUPERSEDED
+
+Reason: Decision-prompt reachability issue. P16-B01 results will not be mixed with V1.1 results.
+
+### P16-B02 — V1.1 Forward Demo Batch
+
+Status: ACTIVE
+
+Baseline:
+- Branch: feature/system-integration-testing
+- Commit: 2593962
+- Tag: phase16-forward-test-baseline-v11
+- Prompt Version: 1.1
+- Model: GroqCloud openai/gpt-oss-20b
+- Symbol: BTCUSDT Perpetual
+- Environment: Bybit Demo
+- Manual Approval: Required
+- Risk Engine: Deterministic V1 unchanged
+
+Verification:
+- 266 tests passed
+- Security audit PASS
+- Production smoke test PASS
+- Journal integrity VALID
+
+Rules:
+- No strategy changes during P16-B02
+- No prompt changes during P16-B02
+- No risk-rule changes during P16-B02
+- No forced trades
+- No cherry-picking
+- Material behavior change requires a new batch
