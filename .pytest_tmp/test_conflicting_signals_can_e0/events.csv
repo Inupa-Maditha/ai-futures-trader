@@ -1,0 +1,5 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,8454a621c3f747308083633318b4d3cb,conflicting-signals-run,2026-10-01T15:44:58.252754+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,1ef2394138444c37bca5ae949ba586ed,conflicting-signals-run,2026-10-01T15:44:58.258769+00:00,MARKET_CONTEXT,BTCUSDT,"{""context"":{""freshness"":""FRESH"",""symbol"":""BTCUSDT"",""technical"":{""alignment"":""MIXED"",""trend_15m"":""BULLISH"",""trend_1h"":""BEARISH"",""trend_4h"":""BULLISH""}}}"
+1.0,9f8844ae6de3407cb58ea1edc61b8652,conflicting-signals-run,2026-10-01T15:44:58.263822+00:00,DECISION,BTCUSDT,"{""accepted"":true,""error"":null,""proposal"":{""action"":""NO_TRADE"",""confidence"":0.4,""no_trade_reason"":""Insufficient directional consensus."",""setup_quality"":""LOW"",""thesis"":""Conflicting multi-timeframe signals.""}}"
+1.0,cb883666cd3d4e1e875545dfe9e8413f,conflicting-signals-run,2026-10-01T15:44:58.267443+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""NO_TRADE""}"

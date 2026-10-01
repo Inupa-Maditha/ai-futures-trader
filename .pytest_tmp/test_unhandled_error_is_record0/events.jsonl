@@ -1,0 +1,3 @@
+{"schema_version":"1.0","event_id":"1497e66294384a89b90f679d23cc7cee","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.921547Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"568278de0dcd464ba14d5148e52c5ae1","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.927241Z","event_type":"ERROR","symbol":"BTCUSDT","payload":{"stage":"UNHANDLED_PIPELINE","error_type":"RuntimeError","message":"Groq unavailable"}}
+{"schema_version":"1.0","event_id":"9bd3dcf708794fff97b73b34feba3fcc","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.932671Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"UNHANDLED_ERROR"}}

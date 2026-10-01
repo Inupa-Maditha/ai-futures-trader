@@ -1,0 +1,7 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,4d6233c2a7834497b096af3f15cdb791,manual-reject-run,2026-10-01T15:44:58.361604+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,99f2a2a68c3f4aff87689d6c825140e2,manual-reject-run,2026-10-01T15:44:58.367367+00:00,MARKET_CONTEXT,BTCUSDT,"{""context"":{""health"":""HEALTHY"",""symbol"":""BTCUSDT""}}"
+1.0,dd9849009c854a4383d0494f1f4d8b2d,manual-reject-run,2026-10-01T15:44:58.373473+00:00,DECISION,BTCUSDT,"{""accepted"":true,""error"":null,""proposal"":{""action"":""LONG"",""confidence"":0.8,""entry_price"":""85000"",""setup_quality"":""HIGH"",""stop_loss"":""84000"",""take_profit"":""87000""}}"
+1.0,06df4fc38a4e443f853d288eb45e9a34,manual-reject-run,2026-10-01T15:44:58.377305+00:00,RISK_RESULT,BTCUSDT,"{""no_trade_reason"":null,""risk_result"":{""decision"":""APPROVE"",""plan"":{""actual_risk_amount"":""1.00"",""entry_price"":""85000"",""executable_quantity"":""0.001"",""leverage"":""1"",""side"":""LONG"",""stop_loss"":""84000"",""take_profit"":""87000""},""reasons"":[]},""status"":""RISK_APPROVED""}"
+1.0,e8f91c7bb8a5466c8d5ae1edb046ce7b,manual-reject-run,2026-10-01T15:44:58.379950+00:00,MANUAL_APPROVAL,BTCUSDT,"{""request"":{""approval_id"":""approval-1"",""symbol"":""BTCUSDT""},""result"":{""approval_id"":""approval-1"",""decision"":""REJECT""}}"
+1.0,56f12424105040aaa7c21ff1b2d33b30,manual-reject-run,2026-10-01T15:44:58.383837+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""MANUALLY_REJECTED""}"

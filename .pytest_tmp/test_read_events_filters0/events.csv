@@ -1,0 +1,3 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,0770d79266c04daf9ca5c47aa3b080b5,run-a,2026-09-22T12:00:00+00:00,DECISION,BTCUSDT,"{""action"":""NO_TRADE"",""confidence"":0.4}"
+1.0,0d60d1e329304c1792117d04cd364c2f,run-b,2026-09-22T12:00:00+00:00,ERROR,BTCUSDT,"{""action"":""NO_TRADE"",""confidence"":0.4}"

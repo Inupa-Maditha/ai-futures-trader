@@ -1,0 +1,3 @@
+{"schema_version":"1.0","event_id":"b4d4b4497fc5489eaaebbaae911d1c29","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.962516Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"068a775bd3444c03abd3adbedc361810","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.967889Z","event_type":"ERROR","symbol":"BTCUSDT","payload":{"stage":"LIFECYCLE","error_type":"RuntimeError","message":"Pipeline returned without writing a terminal journal status."}}
+{"schema_version":"1.0","event_id":"c5e960c051924ff396ab26410bc30da5","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.973687Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"PIPELINE_INCOMPLETE"}}

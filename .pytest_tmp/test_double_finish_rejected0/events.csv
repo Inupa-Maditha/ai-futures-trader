@@ -1,0 +1,3 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,a4d61b8e9ba14351a9b945b456a78264,e48d7c1c0d51438a8b737ab8c0eb97af,2026-10-01T15:44:59.712155+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""DEMO""}"
+1.0,91be46cdaa8347498238aff48e67ed18,e48d7c1c0d51438a8b737ab8c0eb97af,2026-10-01T15:44:59.719007+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""COMPLETE""}"

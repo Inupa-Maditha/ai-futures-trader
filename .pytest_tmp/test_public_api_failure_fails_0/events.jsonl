@@ -1,0 +1,3 @@
+{"schema_version":"1.0","event_id":"bca86b74c4f043439227cba272bc0d25","run_id":"api-failure-run","timestamp_utc":"2026-10-01T15:44:58.158559Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"c26f06fe54b745b698a8ef6a3c5e3d4a","run_id":"api-failure-run","timestamp_utc":"2026-10-01T15:44:58.163362Z","event_type":"ERROR","symbol":"BTCUSDT","payload":{"stage":"UNHANDLED_PIPELINE","error_type":"RuntimeError","message":"Bybit public REST unavailable"}}
+{"schema_version":"1.0","event_id":"5c53e8a7afd8474cb828ba5937ae82d3","run_id":"api-failure-run","timestamp_utc":"2026-10-01T15:44:58.169099Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"UNHANDLED_ERROR"}}

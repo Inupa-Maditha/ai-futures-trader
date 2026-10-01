@@ -1,0 +1,6 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,4b7efd4b08d64ab9a947fa78c0132dc6,integration-run,2026-10-01T15:44:58.318385+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,1f4b315390234c7690a537489d96e15a,integration-run,2026-10-01T15:44:58.324198+00:00,MARKET_CONTEXT,BTCUSDT,"{""context"":{""health"":""HEALTHY"",""symbol"":""BTCUSDT""}}"
+1.0,1f914efe843240d4b9cfeb28252db5c1,integration-run,2026-10-01T15:44:58.328612+00:00,DECISION,BTCUSDT,"{""accepted"":true,""error"":null,""proposal"":{""action"":""SHORT"",""confidence"":0.8,""setup_quality"":""HIGH""}}"
+1.0,3c3f31dd0eb14d8680d26a56e9d61ace,integration-run,2026-10-01T15:44:58.333545+00:00,RISK_RESULT,BTCUSDT,"{""no_trade_reason"":null,""risk_result"":{""decision"":""APPROVE"",""plan"":{""actual_risk_amount"":""50""}},""status"":""RISK_APPROVED""}"
+1.0,07b481c1fac74c189f157c29f1cf8b23,integration-run,2026-10-01T15:44:58.337063+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""DEMO_EXECUTION_DISABLED""}"

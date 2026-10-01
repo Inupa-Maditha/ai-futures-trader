@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,b4d4b4497fc5489eaaebbaae911d1c29,test-run,2026-10-01T15:44:58.962516+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,068a775bd3444c03abd3adbedc361810,test-run,2026-10-01T15:44:58.967889+00:00,ERROR,BTCUSDT,"{""error_type"":""RuntimeError"",""message"":""Pipeline returned without writing a terminal journal status."",""stage"":""LIFECYCLE""}"
+1.0,c5e960c051924ff396ab26410bc30da5,test-run,2026-10-01T15:44:58.973687+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""PIPELINE_INCOMPLETE""}"

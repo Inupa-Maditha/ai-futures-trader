@@ -1,0 +1,3 @@
+{"schema_version":"1.0","event_id":"31a9ee2d4f8a4372a1ee624991922ef2","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:02Z","event_type":"DECISION","symbol":"BTCUSDT","payload":{}}
+{"schema_version":"1.0","event_id":"f05f95b6dd664ba3a69eeeefcc9e8626","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{}}
+{"schema_version":"1.0","event_id":"b57b0a568f0140d8a4ccb53449febde5","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:01Z","event_type":"MARKET_CONTEXT","symbol":"BTCUSDT","payload":{}}

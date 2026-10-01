@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,1497e66294384a89b90f679d23cc7cee,test-run,2026-10-01T15:44:58.921547+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,568278de0dcd464ba14d5148e52c5ae1,test-run,2026-10-01T15:44:58.927241+00:00,ERROR,BTCUSDT,"{""error_type"":""RuntimeError"",""message"":""Groq unavailable"",""stage"":""UNHANDLED_PIPELINE""}"
+1.0,9bd3dcf708794fff97b73b34feba3fcc,test-run,2026-10-01T15:44:58.932671+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""UNHANDLED_ERROR""}"

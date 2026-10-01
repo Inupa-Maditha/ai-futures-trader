@@ -1,0 +1,5 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,f480e55f11f3446d9890b7e4c7ad4ff1,decision-rejected-run,2026-10-01T15:44:58.449793+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,e70cdb52ac804e119841331cf3b842d5,decision-rejected-run,2026-10-01T15:44:58.453781+00:00,MARKET_CONTEXT,BTCUSDT,"{""context"":{""health"":""HEALTHY"",""symbol"":""BTCUSDT""}}"
+1.0,6da51c86e62542b581db0f55398e0c73,decision-rejected-run,2026-10-01T15:44:58.459281+00:00,DECISION,BTCUSDT,"{""accepted"":false,""error"":""Malformed LLM response"",""proposal"":null}"
+1.0,5ea91f58cdd84f988720cc022b9a5f38,decision-rejected-run,2026-10-01T15:44:58.464344+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""DECISION_REJECTED""}"

@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,9ad0d9c25ae74a6f8dc98193b40595e6,test-run,2026-10-01T15:44:58.941983+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,74123932a97d4d1fb55b8c2bb32fe87c,test-run,2026-10-01T15:44:58.947683+00:00,ERROR,BTCUSDT,"{""error_type"":""ValueError"",""message"":""market context failed"",""stage"":""UNHANDLED_PIPELINE""}"
+1.0,614ca052dab145e6b42ead40487acdae,test-run,2026-10-01T15:44:58.953714+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""UNHANDLED_ERROR""}"

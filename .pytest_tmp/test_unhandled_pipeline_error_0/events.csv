@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,5468b76d687848fca8152f40ce197cdf,integration-run,2026-10-01T15:44:58.342517+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,3fd7997662634efca02a9e33c8d4e046,integration-run,2026-10-01T15:44:58.348382+00:00,ERROR,BTCUSDT,"{""error_type"":""RuntimeError"",""message"":""Simulated public API failure"",""stage"":""UNHANDLED_PIPELINE""}"
+1.0,4d2f4e6eed1c4911b3f2faebec2404d6,integration-run,2026-10-01T15:44:58.353031+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""UNHANDLED_ERROR""}"

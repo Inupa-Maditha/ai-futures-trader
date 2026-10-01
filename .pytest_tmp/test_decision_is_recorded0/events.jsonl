@@ -1,0 +1,2 @@
+{"schema_version":"1.0","event_id":"ac13d2aca6864a429e4994849057f4e5","run_id":"run-1","timestamp_utc":"2026-10-01T15:44:59.668369Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"DEMO"}}
+{"schema_version":"1.0","event_id":"53012dfd17804576a98ddaca01941f44","run_id":"run-1","timestamp_utc":"2026-10-01T15:44:59.673924Z","event_type":"DECISION","symbol":"BTCUSDT","payload":{"accepted":true,"error":null,"proposal":{"price":"85000.10","side":"LONG"}}}

@@ -1,0 +1,9 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,65c2855a7f6741828db3dcc3d726fdc1,run-a,2026-09-22T12:00:00+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,a3ffd05e89b14eb79f1e89ea08c5d896,run-a,2026-09-22T12:00:01+00:00,MARKET_CONTEXT,BTCUSDT,{}
+1.0,4de9cb595b794f93b349aa3cc6da9aed,run-a,2026-09-22T12:00:02+00:00,DECISION,BTCUSDT,"{""accepted"":true,""error"":null,""proposal"":{""action"":""NO_TRADE"",""confidence"":""0.4"",""setup_quality"":""LOW""}}"
+1.0,f3c0f0d46958466294b5a71fa9f2ba92,run-a,2026-09-22T12:00:03+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""NO_TRADE""}"
+1.0,04198080a6a24af1a16483528079ef5d,run-b,2026-09-22T12:00:00+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,357974791a0a436eba163c04b9f679d3,run-b,2026-09-22T12:00:01+00:00,MARKET_CONTEXT,BTCUSDT,{}
+1.0,e839fc66219c40afaa4c7d9b8e480b6a,run-b,2026-09-22T12:00:02+00:00,DECISION,BTCUSDT,"{""accepted"":true,""error"":null,""proposal"":{""action"":""NO_TRADE"",""confidence"":""0.4"",""setup_quality"":""LOW""}}"
+1.0,d253082b9350466184288c643b7d0125,run-b,2026-09-22T12:00:03+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""NO_TRADE""}"

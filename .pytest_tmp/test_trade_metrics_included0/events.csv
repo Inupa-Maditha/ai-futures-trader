@@ -1,0 +1,11 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,fce96d66458444c7956bf868719a205b,run-trade,2026-09-22T12:00:10+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,4fc4165424124ffa865f4d5ecd0a5400,run-trade,2026-09-22T12:00:11+00:00,MARKET_CONTEXT,BTCUSDT,{}
+1.0,cbc723b3c59e4b87a566e3a82daf80f8,run-trade,2026-09-22T12:00:12+00:00,DECISION,BTCUSDT,"{""accepted"":true,""error"":null,""proposal"":{""action"":""LONG"",""confidence"":""0.8"",""setup_quality"":""HIGH""}}"
+1.0,a43b572907ba49758fe41de9ec818dae,run-trade,2026-09-22T12:00:13+00:00,RISK_RESULT,BTCUSDT,"{""no_trade_reason"":null,""risk_result"":{""decision"":""APPROVE""},""status"":""RISK_APPROVED""}"
+1.0,56cce1c72d3642f88efc5bd3f9055b56,run-trade,2026-09-22T12:00:14+00:00,MANUAL_APPROVAL,BTCUSDT,"{""request"":{},""result"":{""decision"":""APPROVE""}}"
+1.0,4b37c6c6e1c0416bbea3086d45f8a69e,run-trade,2026-09-22T12:00:15+00:00,EXECUTION_RESULT,BTCUSDT,"{""request"":{},""result"":{}}"
+1.0,dad4018b613f4032ad72cca4606a2753,run-trade,2026-09-22T12:00:16+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""DEMO_ORDER_CONFIRMED""}"
+1.0,6d72e16691b342378dda66cab41c7d4e,e907c8e25c1444cc99115f2dfdd4767b,2026-10-01T15:44:59.570256+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""TRADE_OUTCOME_CAPTURE""}"
+1.0,c4fcad67a514412d89c1aa1ded271717,e907c8e25c1444cc99115f2dfdd4767b,2026-10-01T15:44:59.572237+00:00,TRADE_OUTCOME,BTCUSDT,"{""outcome"":{""closed_at_utc"":""2026-09-22T13:00:00+00:00"",""entry_price"":""85000"",""exit_price"":""87000"",""exit_reason"":""TAKE_PROFIT"",""initial_risk_amount"":""50"",""opened_at_utc"":""2026-09-22T12:00:00+00:00"",""quantity"":""0.01"",""realized_pnl"":""100"",""run_id"":""run-trade"",""side"":""LONG"",""symbol"":""BTCUSDT"",""trade_id"":""trade-1""}}"
+1.0,138dae1b309b4dd19e83ad0f2e382431,e907c8e25c1444cc99115f2dfdd4767b,2026-10-01T15:44:59.574545+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""TRADE_OUTCOME_RECORDED""}"

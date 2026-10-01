@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,d842e8f2ac6240a18ec6d8105a972ee4,2d4c09ce2c5d4603b97cca89ae742695,2026-10-01T15:44:59.527589+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""TRADE_OUTCOME_CAPTURE""}"
+1.0,c8d54384514c4e7a96f4eaf0751c2703,2d4c09ce2c5d4603b97cca89ae742695,2026-10-01T15:44:59.532752+00:00,TRADE_OUTCOME,BTCUSDT,"{""outcome"":{""closed_at_utc"":""2026-09-22T13:00:00+00:00"",""entry_price"":""85000"",""exit_price"":""86000"",""exit_reason"":""TAKE_PROFIT"",""initial_risk_amount"":""50"",""opened_at_utc"":""2026-09-22T12:00:00+00:00"",""quantity"":""0.01"",""realized_pnl"":""100"",""run_id"":""source-run"",""side"":""LONG"",""symbol"":""BTCUSDT"",""trade_id"":""trade-1""}}"
+1.0,93945db3a5de459a8a221d1d09fbea61,2d4c09ce2c5d4603b97cca89ae742695,2026-10-01T15:44:59.536122+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""TRADE_OUTCOME_RECORDED""}"
