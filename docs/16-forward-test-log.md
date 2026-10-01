@@ -35,17 +35,17 @@ Results below 100 trades must be labeled preliminary.
 
 | Field | Value |
 |---|---|
-| Batch ID | |
-| Start Date | |
-| End Date | |
-| Branch | |
-| Commit | |
-| Tag / Version | |
-| Strategy Version | |
-| Feature Version | |
-| Prompt Version | |
-| Risk Configuration Version | |
-| LLM Provider / Model | |
+| Batch ID | P16-B01 |
+| Start Date | 2026-10-01 |
+| End Date | OPEN |
+| Branch | feature/system-integration-testing |
+| Commit | 13d81ba59466c7c4b6e0701b291bbb67715e5be6 |
+| Tag / Version | phase16-forward-test-baseline |
+| Strategy Version | V1 frozen baseline |
+| Feature Version | V1 frozen baseline |
+| Prompt Version | 1.0 |
+| Risk Configuration Version | V1 frozen baseline |
+| LLM Provider / Model | Groq / openai/gpt-oss-20b |
 | Symbol | BTCUSDT |
 | Exchange | Bybit |
 | Execution Environment | Demo |
