@@ -1,0 +1,3 @@
+{"schema_version":"1.0","event_id":"5468b76d687848fca8152f40ce197cdf","run_id":"integration-run","timestamp_utc":"2026-10-01T15:44:58.342517Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"3fd7997662634efca02a9e33c8d4e046","run_id":"integration-run","timestamp_utc":"2026-10-01T15:44:58.348382Z","event_type":"ERROR","symbol":"BTCUSDT","payload":{"stage":"UNHANDLED_PIPELINE","error_type":"RuntimeError","message":"Simulated public API failure"}}
+{"schema_version":"1.0","event_id":"4d2f4e6eed1c4911b3f2faebec2404d6","run_id":"integration-run","timestamp_utc":"2026-10-01T15:44:58.353031Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"UNHANDLED_ERROR"}}

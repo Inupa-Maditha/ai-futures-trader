@@ -1,0 +1,5 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,f5859a3dcf9344f19e451029b36c3775,malformed-llm-run,2026-10-01T15:44:58.211398+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,15a1ddbdc4624a2f9700e11e03f2a1e4,malformed-llm-run,2026-10-01T15:44:58.217352+00:00,MARKET_CONTEXT,BTCUSDT,"{""context"":{""freshness"":""FRESH"",""symbol"":""BTCUSDT"",""technical"":{""alignment"":""BULLISH_ALIGNED"",""trend_15m"":""BULLISH"",""trend_1h"":""BULLISH"",""trend_4h"":""BULLISH""}}}"
+1.0,62c88d58bc4e4d4b9e3e2e71a161833b,malformed-llm-run,2026-10-01T15:44:58.222447+00:00,DECISION,BTCUSDT,"{""accepted"":false,""error"":""Malformed structured LLM response"",""proposal"":null}"
+1.0,3db6afdb72be48c1b33ea0528c943eb8,malformed-llm-run,2026-10-01T15:44:58.227057+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""DECISION_REJECTED""}"

@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,31a9ee2d4f8a4372a1ee624991922ef2,run-a,2026-09-22T12:00:02+00:00,DECISION,BTCUSDT,{}
+1.0,f05f95b6dd664ba3a69eeeefcc9e8626,run-a,2026-09-22T12:00:00+00:00,RUN_STARTED,BTCUSDT,{}
+1.0,b57b0a568f0140d8a4ccb53449febde5,run-a,2026-09-22T12:00:01+00:00,MARKET_CONTEXT,BTCUSDT,{}

@@ -1,0 +1,3 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,dd654072e6f34db3bce190840c7a4edf,broken,2026-09-22T12:00:00+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,9096a5856a70473c8766f118289c4dc6,broken,2026-09-22T12:00:01+00:00,DECISION,BTCUSDT,"{""accepted"":true,""proposal"":{""action"":""NO_TRADE"",""confidence"":""0.4""}}"

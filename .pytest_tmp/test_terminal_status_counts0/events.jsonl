@@ -1,0 +1,8 @@
+{"schema_version":"1.0","event_id":"65c2855a7f6741828db3dcc3d726fdc1","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"a3ffd05e89b14eb79f1e89ea08c5d896","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:01Z","event_type":"MARKET_CONTEXT","symbol":"BTCUSDT","payload":{}}
+{"schema_version":"1.0","event_id":"4de9cb595b794f93b349aa3cc6da9aed","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:02Z","event_type":"DECISION","symbol":"BTCUSDT","payload":{"accepted":true,"error":null,"proposal":{"action":"NO_TRADE","confidence":"0.4","setup_quality":"LOW"}}}
+{"schema_version":"1.0","event_id":"f3c0f0d46958466294b5a71fa9f2ba92","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:03Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"NO_TRADE"}}
+{"schema_version":"1.0","event_id":"04198080a6a24af1a16483528079ef5d","run_id":"run-b","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"357974791a0a436eba163c04b9f679d3","run_id":"run-b","timestamp_utc":"2026-09-22T12:00:01Z","event_type":"MARKET_CONTEXT","symbol":"BTCUSDT","payload":{}}
+{"schema_version":"1.0","event_id":"e839fc66219c40afaa4c7d9b8e480b6a","run_id":"run-b","timestamp_utc":"2026-09-22T12:00:02Z","event_type":"DECISION","symbol":"BTCUSDT","payload":{"accepted":true,"error":null,"proposal":{"action":"NO_TRADE","confidence":"0.4","setup_quality":"LOW"}}}
+{"schema_version":"1.0","event_id":"d253082b9350466184288c643b7d0125","run_id":"run-b","timestamp_utc":"2026-09-22T12:00:03Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"NO_TRADE"}}

@@ -1,0 +1,2 @@
+{"schema_version":"1.0","event_id":"4655c1a058114c72b72c08f886458323","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.904955Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"acce3433db5b44c890e69e73385c295a","run_id":"test-run","timestamp_utc":"2026-10-01T15:44:58.910275Z","event_type":"RUN_FINISHED","symbol":"BTCUSDT","payload":{"status":"NO_TRADE"}}

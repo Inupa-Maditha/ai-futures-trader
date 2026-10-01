@@ -740,3 +740,43 @@ Evaluation
 ```
 
 A later layer shall not compensate for an unreliable earlier layer.
+
+---
+
+# Sprint Completion Status — Phase 15 Baseline
+
+| Sprint | Status | Result |
+|---|---|---|
+| Sprint 1 — Market Data Pipeline | Complete | Mainnet public REST / WebSocket pipeline, health, freshness, recording |
+| Sprint 2 — Technical Analysis and Market Structure | Complete | Deterministic indicators, swings, structure, multi-timeframe snapshot |
+| Sprint 3 — Context and Hybrid Decision Engine | Complete | Structured context, Groq LLM proposal, schema / evidence validation |
+| Sprint 4 — Deterministic Risk Engine | Complete | Position sizing, exchange rules, daily-loss and position safeguards |
+| Sprint 5 — Manual Approval and Demo Execution | Complete | Exact approval gate, Demo execution, idempotency, reconciliation |
+| Sprint 6 — Journaling and Evaluation | Complete | JSONL / CSV journal, integrity checks, metrics, outcome importer |
+
+Current development phase:
+
+```text
+Phase 15 — System Integration / Stability Testing
+```
+
+Current automated test baseline:
+
+```text
+257 passed
+```
+
+Frozen stability baseline:
+
+```text
+Branch:
+feature/system-integration-testing
+
+Commit:
+9a18e050f68aa311f4ca4a7628384eee6aec21af
+
+Tag:
+phase15-stability-baseline
+```
+
+The six implementation sprints are complete. Remaining V1 work is integration stability, forward Demo testing, final evaluation, documentation, and minimal local deployment verification.

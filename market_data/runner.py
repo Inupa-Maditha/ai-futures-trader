@@ -1,9 +1,16 @@
 from __future__ import annotations
 
-from threading import Event, Lock, Thread
+from threading import (
+    Event,
+    Lock,
+    Thread,
+)
+
 from time import sleep
 
-from config.settings import SYMBOL
+from config.settings import (
+    SYMBOL,
+)
 
 from data_quality.freshness import (
     build_default_health_monitor,
@@ -16,21 +23,70 @@ from derivatives.bybit_derivatives import (
     PositioningSnapshot,
 )
 
-from market_data.candles import CandleService
-from market_data.liquidations import LiquidationFlow
-from market_data.live_candles import LiveCandleStore
-from market_data.orderbook import OrderBook
-from market_data.public_ws import BybitPublicWebSocket
-from market_data.recorder import JsonlMarketDataRecorder
-from market_data.trades import TradeFlow
+from market_data.candles import (
+    CandleService,
+)
+
+from market_data.liquidations import (
+    LiquidationFlow,
+)
+
+from market_data.live_candles import (
+    LiveCandleStore,
+)
+
+from market_data.orderbook import (
+    OrderBook,
+)
+
+from market_data.public_ws import (
+    BybitPublicWebSocket,
+)
+
+from market_data.recorder import (
+    JsonlMarketDataRecorder,
+)
+
+from market_data.trades import (
+    TradeFlow,
+)
+
+from market_data.ws_health import (
+    WebSocketHealthSupervisor,
+)
 
 
 class MarketDataRunner:
     def __init__(
         self,
         rest_poll_seconds: int = 60,
+        ws_health_poll_seconds: float = 1.0,
     ):
-        self.rest_poll_seconds = rest_poll_seconds
+        if (
+            rest_poll_seconds
+            <= 0
+        ):
+            raise ValueError(
+                "rest_poll_seconds "
+                "must be positive."
+            )
+
+        if (
+            ws_health_poll_seconds
+            <= 0
+        ):
+            raise ValueError(
+                "ws_health_poll_seconds "
+                "must be positive."
+            )
+
+        self.rest_poll_seconds = (
+            rest_poll_seconds
+        )
+
+        self.ws_health_poll_seconds = (
+            ws_health_poll_seconds
+        )
 
         self.stop_event = Event()
 
@@ -38,7 +94,9 @@ class MarketDataRunner:
             build_default_health_monitor()
         )
 
-        self.recorder = JsonlMarketDataRecorder()
+        self.recorder = (
+            JsonlMarketDataRecorder()
+        )
 
         self.orderbook = OrderBook(
             symbol=SYMBOL,
@@ -50,27 +108,59 @@ class MarketDataRunner:
             window_seconds=60,
         )
 
-        self.liquidations = LiquidationFlow(
-            symbol=SYMBOL,
-            window_seconds=60,
+        self.liquidations = (
+            LiquidationFlow(
+                symbol=SYMBOL,
+                window_seconds=60,
+            )
         )
 
-        self.candles = LiveCandleStore(
-            symbol=SYMBOL,
+        self.candles = (
+            LiveCandleStore(
+                symbol=SYMBOL,
+            )
         )
 
-        self.ws = BybitPublicWebSocket(
-            health_monitor=self.health_monitor,
-            recorder=self.recorder,
+        self.ws = (
+            BybitPublicWebSocket(
+                health_monitor=(
+                    self.health_monitor
+                ),
+
+                recorder=(
+                    self.recorder
+                ),
+            )
         )
 
-        self.candle_service = CandleService(
-            recorder=self.recorder,
+        self.ws_health_supervisor = (
+            WebSocketHealthSupervisor(
+                health_monitor=(
+                    self.health_monitor
+                ),
+
+                connection_checker=(
+                    self.ws.is_connected
+                ),
+            )
         )
 
-        self.derivatives = BybitDerivativesService(
-            health_monitor=self.health_monitor,
-            recorder=self.recorder,
+        self.candle_service = (
+            CandleService(
+                recorder=self.recorder,
+            )
+        )
+
+        self.derivatives = (
+            BybitDerivativesService(
+                health_monitor=(
+                    self.health_monitor
+                ),
+
+                recorder=(
+                    self.recorder
+                ),
+            )
         )
 
         self.latest_open_interest: (
@@ -87,13 +177,17 @@ class MarketDataRunner:
 
         self._derivatives_lock = Lock()
 
-        self._rest_thread: Thread | None = None
+        self._rest_thread:Thread | None = None
+
+        self._ws_health_thread:Thread | None = None
 
     def bootstrap_historical_candles(
         self,
     ) -> None:
+
         print(
-            "Bootstrapping historical candles..."
+            "Bootstrapping historical "
+            "candles..."
         )
 
         for timeframe in (
@@ -111,12 +205,17 @@ class MarketDataRunner:
 
             print(
                 f"  {timeframe}: "
-                f"{len(candles)} closed candles"
+                f"{len(candles)} "
+                f"closed candles"
             )
 
-    def start_websockets(self) -> None:
+    def start_websockets(
+        self,
+    ) -> None:
+
         print(
-            "Starting public WebSocket streams..."
+            "Starting public "
+            "WebSocket streams..."
         )
 
         self.ws.subscribe_orderbook(
@@ -135,30 +234,50 @@ class MarketDataRunner:
             self.candles
         )
 
-    def poll_rest_once(self) -> None:
-        oi = self.derivatives.get_open_interest(
-            interval="15min"
+    def poll_rest_once(
+        self,
+    ) -> None:
+
+        oi = (
+            self.derivatives
+            .get_open_interest(
+                interval="15min"
+            )
         )
 
-        funding = self.derivatives.get_funding()
+        funding = (
+            self.derivatives
+            .get_funding()
+        )
 
         positioning = (
-            self.derivatives.get_positioning(
+            self.derivatives
+            .get_positioning(
                 period="15min"
             )
         )
 
-        # Publish the new derivatives batch
-        # atomically after all calls succeed.
+        # Publish new derivatives state
+        # atomically only after every
+        # REST call succeeds.
         with self._derivatives_lock:
-            self.latest_open_interest = oi
-            self.latest_funding = funding
-            self.latest_positioning = positioning
+            self.latest_open_interest = (
+                oi
+            )
+
+            self.latest_funding = (
+                funding
+            )
+
+            self.latest_positioning = (
+                positioning
+            )
 
         print(
             "[REST] "
             f"OI={oi.current} BTC | "
-            f"Funding={funding.current_funding_rate} | "
+            f"Funding="
+            f"{funding.current_funding_rate} | "
             f"Long="
             f"{positioning.account_holder_long_ratio} | "
             f"Short="
@@ -172,10 +291,19 @@ class MarketDataRunner:
         FundingSnapshot,
         PositioningSnapshot,
     ]:
+
         with self._derivatives_lock:
-            oi = self.latest_open_interest
-            funding = self.latest_funding
-            positioning = self.latest_positioning
+            oi = (
+                self.latest_open_interest
+            )
+
+            funding = (
+                self.latest_funding
+            )
+
+            positioning = (
+                self.latest_positioning
+            )
 
         if (
             oi is None
@@ -183,8 +311,9 @@ class MarketDataRunner:
             or positioning is None
         ):
             raise RuntimeError(
-                "Derivative market data has "
-                "not been initialized yet."
+                "Derivative market data "
+                "has not been initialized "
+                "yet."
             )
 
         return (
@@ -193,7 +322,10 @@ class MarketDataRunner:
             positioning,
         )
 
-    def _rest_loop(self) -> None:
+    def _rest_loop(
+        self,
+    ) -> None:
+
         while not self.stop_event.wait(
             self.rest_poll_seconds
         ):
@@ -210,37 +342,91 @@ class MarketDataRunner:
     def _mark_rest_sources_disconnected(
         self,
     ) -> None:
+
         for source_name in (
             "open_interest",
             "funding",
             "account_positioning",
         ):
-            self.health_monitor.get(
-                source_name
-            ).mark_disconnected()
+            (
+                self.health_monitor
+                .get(source_name)
+                .mark_disconnected()
+            )
 
-    def start_rest_poller(self) -> None:
+    def _ws_health_loop(
+        self,
+    ) -> None:
+
+        while not self.stop_event.wait(
+            self.ws_health_poll_seconds
+        ):
+            self.ws_health_supervisor.check_once()
+
+    def start_rest_poller(
+        self,
+    ) -> None:
+
         self._rest_thread = Thread(
             target=self._rest_loop,
-            name="rest-market-data-poller",
+
+            name=(
+                "rest-market-data-poller"
+            ),
+
             daemon=True,
         )
 
         self._rest_thread.start()
 
-    def print_health_summary(self) -> None:
-        summary = self.health_monitor.summary()
+    def start_ws_health_monitor(
+        self,
+    ) -> None:
 
-        print(
-            "\n=== Market Data Health ==="
+        # Initial transport-state capture.
+        self.ws_health_supervisor.check_once()
+
+        self._ws_health_thread = Thread(
+            target=(
+                self._ws_health_loop
+            ),
+
+            name=(
+                "ws-health-monitor"
+            ),
+
+            daemon=True,
         )
 
-        for name, status in summary.items():
+        self._ws_health_thread.start()
+
+    def print_health_summary(
+        self,
+    ) -> None:
+
+        summary = (
+            self.health_monitor
+            .summary()
+        )
+
+        print(
+            "\n=== Market Data "
+            "Health ==="
+        )
+
+        for (
+            name,
+            status,
+        ) in summary.items():
             print(
-                f"{name:<22} {status}"
+                f"{name:<22} "
+                f"{status}"
             )
 
-    def market_data_ready(self) -> bool:
+    def market_data_ready(
+        self,
+    ) -> bool:
+
         required_sources = [
             "orderbook",
             "public_trades",
@@ -253,11 +439,17 @@ class MarketDataRunner:
             "account_positioning",
         ]
 
-        return self.health_monitor.critical_ok(
-            required_sources
+        return (
+            self.health_monitor
+            .critical_ok(
+                required_sources
+            )
         )
 
-    def start(self) -> None:
+    def start(
+        self,
+    ) -> None:
+
         print(
             "=== AI Futures Trader "
             "— Market Data Runner ==="
@@ -267,6 +459,8 @@ class MarketDataRunner:
 
         self.start_websockets()
 
+        self.start_ws_health_monitor()
+
         sleep(3)
 
         self.poll_rest_once()
@@ -274,18 +468,34 @@ class MarketDataRunner:
         self.start_rest_poller()
 
         print(
-            "\nMarket data pipeline started."
+            "\nMarket data pipeline "
+            "started."
         )
 
-    def stop(self) -> None:
+    def stop(
+        self,
+    ) -> None:
+
         print(
-            "\nStopping market data pipeline..."
+            "\nStopping market data "
+            "pipeline..."
         )
 
         self.stop_event.set()
 
-        if self._rest_thread is not None:
+        if (
+            self._rest_thread
+            is not None
+        ):
             self._rest_thread.join(
+                timeout=5
+            )
+
+        if (
+            self._ws_health_thread
+            is not None
+        ):
+            self._ws_health_thread.join(
                 timeout=5
             )
 
@@ -294,11 +504,13 @@ class MarketDataRunner:
 
         except Exception as exc:
             print(
-                f"[WS SHUTDOWN WARNING] {exc}"
+                "[WS SHUTDOWN WARNING] "
+                f"{exc}"
             )
 
         self.recorder.close()
 
         print(
-            "Market data pipeline stopped."
+            "Market data pipeline "
+            "stopped."
         )

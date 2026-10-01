@@ -1,0 +1,1 @@
+{"schema_version":"1.0","event_id":"c25ad3cf6c124a5fa3106374900ad6e8","run_id":"capture-run","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"TRADE_OUTCOME","symbol":"BTCUSDT","payload":{"outcome":{"bad":"data"}}}

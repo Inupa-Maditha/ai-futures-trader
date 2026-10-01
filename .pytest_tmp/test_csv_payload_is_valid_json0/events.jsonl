@@ -1,0 +1,1 @@
+{"schema_version":"1.0","event_id":"d655f5022efa403391cb3f121d07c6c6","run_id":"run-1","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"DECISION","symbol":"BTCUSDT","payload":{"action":"NO_TRADE","confidence":0.4}}

@@ -1,0 +1,4 @@
+schema_version,event_id,run_id,timestamp_utc,event_type,symbol,payload_json
+1.0,bca86b74c4f043439227cba272bc0d25,api-failure-run,2026-10-01T15:44:58.158559+00:00,RUN_STARTED,BTCUSDT,"{""mode"":""BYBIT_DEMO""}"
+1.0,c26f06fe54b745b698a8ef6a3c5e3d4a,api-failure-run,2026-10-01T15:44:58.163362+00:00,ERROR,BTCUSDT,"{""error_type"":""RuntimeError"",""message"":""Bybit public REST unavailable"",""stage"":""UNHANDLED_PIPELINE""}"
+1.0,5c53e8a7afd8474cb828ba5937ae82d3,api-failure-run,2026-10-01T15:44:58.169099+00:00,RUN_FINISHED,BTCUSDT,"{""status"":""UNHANDLED_ERROR""}"

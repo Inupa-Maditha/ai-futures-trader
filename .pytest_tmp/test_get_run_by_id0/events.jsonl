@@ -1,0 +1,2 @@
+{"schema_version":"1.0","event_id":"a079a3b35795422faf86c6f33437c226","run_id":"run-a","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{}}
+{"schema_version":"1.0","event_id":"3932f6789f2c4752a93559817866d1bb","run_id":"run-b","timestamp_utc":"2026-09-22T12:00:10Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{}}

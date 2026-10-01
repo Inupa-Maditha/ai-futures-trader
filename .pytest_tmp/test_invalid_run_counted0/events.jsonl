@@ -1,0 +1,2 @@
+{"schema_version":"1.0","event_id":"dd654072e6f34db3bce190840c7a4edf","run_id":"broken","timestamp_utc":"2026-09-22T12:00:00Z","event_type":"RUN_STARTED","symbol":"BTCUSDT","payload":{"mode":"BYBIT_DEMO"}}
+{"schema_version":"1.0","event_id":"9096a5856a70473c8766f118289c4dc6","run_id":"broken","timestamp_utc":"2026-09-22T12:00:01Z","event_type":"DECISION","symbol":"BTCUSDT","payload":{"accepted":true,"proposal":{"action":"NO_TRADE","confidence":"0.4"}}}
