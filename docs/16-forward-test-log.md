@@ -189,3 +189,33 @@ Order Submitted: No
 
 Classification:
 Valid forward-test observation. No trade was forced.
+
+### P16-B02 Session 003
+
+```text
+Run ID: 7bb937ccb5fa4c758bc6263059647766
+
+Market:
+Alignment: BULLISH_ALIGNED
+15m: BULLISH
+1h: BULLISH
+4h: BULLISH
+
+Decision:
+Action: LONG
+Setup Quality: HIGH
+Confidence: 0.8
+Entry: 85220.0
+Stop Loss: 85000.0
+Take Profit: 87000.0
+
+Risk Result:
+RISK_REJECTED
+Reason: Required leverage exceeds the maximum allowed risk-policy leverage.
+
+Terminal Status: RISK_REJECTED
+Manual Approval: Not requested
+Order Submitted: No
+
+Classification:
+Valid forward-test observation. Directional LONG proposal reached the deterministic risk layer and was rejected safely.
